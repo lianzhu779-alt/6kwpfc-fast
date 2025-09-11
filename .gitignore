@@ -1,0 +1,27 @@
+# CCS/编译产物
+Debug*/
+Release*/
+*.out
+*.map
+*.obj
+*.o
+*.d
+*.dep
+*.lst
+*.lib
+*.a
+*.mk
+*.tmp
+*.log
+
+# 生成的汇编/中间文件
+*.asm
+*.src
+
+# 必要文件请保留（不要忽略）
+!*.cmd        # 链接命令文件通常需要纳入版本库
+!.project
+!.cproject
+!.ccsproject
+!.launches/
+!targetConfigs/
