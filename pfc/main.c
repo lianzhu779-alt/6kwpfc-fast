@@ -3,7 +3,7 @@
  * @file    main.c
  * @brief   主程序文件
  * @author  (你的名字或团队)
- * @date    (日期)
+ * @date    (
  * @version V1.0
  *
  * @brief   该程序为DSP28x系列微控制器的初始化引导程序。
