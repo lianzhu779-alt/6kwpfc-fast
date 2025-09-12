@@ -1,18 +1,18 @@
 /*
  * filter_user.h
  *
- *  Created on: 2025Äê6ÔÂ22ÈÕ
+ *  Created on: 2025å¹´6æœˆ22æ—¥
  *      Author: galaxy kono
  */
 
 #ifndef APP_FILTER_USER_FILTER_USER_H_
 #define APP_FILTER_USER_FILTER_USER_H_
-#include "DSP2833x_Device.h"     // DSP2833x Í·ÎÄ¼þ
-#include "DSP2833x_Examples.h"   // DSP2833x Ê¾ÀýÍ·ÎÄ¼þ
+#include "DSP2833x_Device.h"     // DSP2833x å¤´æ–‡ä»¶
+#include "DSP2833x_Examples.h"   // DSP2833x ç¤ºä¾‹å¤´æ–‡ä»¶
 
 
 float filter_1_x(float NEW_DATA,float LAST_OUT,float K_x);
 float filter_2_x(float NEW_DATA,float OLD_DATA,float K_x);
 
 
-#endif /* APP_FILTER_USER_FILTER_USER_H_ */
+#endif 

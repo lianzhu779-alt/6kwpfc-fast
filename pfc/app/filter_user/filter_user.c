@@ -1,14 +1,14 @@
 /*
  * filter_user.c
  *
- *  Created on: 2025Äê6ÔÂ22ÈÕ
+ *  Created on: 2025å¹´6æœˆ22æ—¥
  *      Author: galaxy kono
  */
 #include "filter_user.h"
 
 float filter_1_x(float NEW_DATA,float LAST_OUT,float K_x)
 {
-    //ÊµÑé³öÓĞÏàÎ»Æ«ÒÆ£¬Ä¿Ç°ÓÃÓÚËøÏà
+    //å®éªŒå‡ºæœ‰ç›¸ä½åç§»ï¼Œç›®å‰ç”¨äºé”ç›¸
     float32 NOW_OUT;
     NOW_OUT=(1-K_x)*LAST_OUT + K_x * NEW_DATA;
     return NOW_OUT;
@@ -17,7 +17,7 @@ float filter_1_x(float NEW_DATA,float LAST_OUT,float K_x)
 
 float filter_2_x(float NEW_DATA,float OLD_DATA,float K_x)
 {
-    //Ò»½×µÍÍ¨ÂË²¨Æ÷£¬°ÑÊı¾İ£¬ÁôÍ½µÜ×öppt
+    //ä¸€é˜¶ä½é€šæ»¤æ³¢å™¨ï¼ŒæŠŠæ•°æ®ï¼Œç•™å¾’å¼Ÿåšppt
     OLD_DATA=(1-K_x)*OLD_DATA + K_x * NEW_DATA;
     return OLD_DATA;
 }

@@ -43,8 +43,10 @@
                                     <listOptionValue value="${workspace_loc:/${ProjName}/app/adc_user}"/>
                                     <listOptionValue value="${workspace_loc:/${ProjName}/app/filter_user}"/>
                                     <listOptionValue value="${workspace_loc:/${ProjName}/app/epwm_user}"/>
+                                    <listOptionValue value="${workspace_loc:/${ProjName}/app/relay-user"/>
                                     <listOptionValue value="${workspace_loc:/${ProjName}/include}"/>
                                     <listOptionValue value="${CG_TOOL_ROOT}/include"/>
+                                    <listOptionValue value="${workspace_loc:/${ProjName}/app/led-user"/>
                                 </option>
                                 <option id="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.DEBUGGING_MODEL.1532724357" superClass="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.DEBUGGING_MODEL" value="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.DEBUGGING_MODEL.SYMDEBUG__DWARF" valueType="enumerated"/>
                                 <option id="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.DIAG_WARNING.957333708" superClass="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.DIAG_WARNING" valueType="stringList">
@@ -79,6 +81,34 @@
                             <tool id="com.ti.ccstudio.buildDefinitions.C2000_22.6.hex.1102509431" name="C2000 Hex Utility" superClass="com.ti.ccstudio.buildDefinitions.C2000_22.6.hex"/>
                         </toolChain>
                     </folderInfo>
+                    <fileInfo id="com.ti.ccstudio.buildDefinitions.C2000.Debug.1188552488.app/led-user/led-user.c" name="led-user.c" rcbsApplicability="disable" resourcePath="app/led-user/led-user.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.C2000_22.6.exe.compilerDebug.1339719409.720612172">
+                        <tool id="com.ti.ccstudio.buildDefinitions.C2000_22.6.exe.compilerDebug.1339719409.720612172" name="C2000 Compiler" superClass="com.ti.ccstudio.buildDefinitions.C2000_22.6.exe.compilerDebug.1339719409">
+                            <option id="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.INCLUDE_PATH.1255359704" superClass="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.INCLUDE_PATH" valueType="includePath">
+                                <listOptionValue value="${PROJECT_ROOT}"/>
+                                <listOptionValue value="${workspace_loc:/${ProjName}/app/adc_user}"/>
+                                <listOptionValue value="${workspace_loc:/${ProjName}/app/filter_user}"/>
+                                <listOptionValue value="${workspace_loc:/${ProjName}/app/epwm_user}"/>
+                                <listOptionValue value="${workspace_loc:/${ProjName}/include}"/>
+                                <listOptionValue value="${CG_TOOL_ROOT}/include"/>
+                                <listOptionValue value="C:/Users/galaxy kono/workspace_ccstheia/pfc/app/led-user"/>
+                                <listOptionValue value="C:/Users/galaxy kono/workspace_ccstheia/pfc/app/relay-user"/>
+                            </option>
+                        </tool>
+                    </fileInfo>
+                    <fileInfo id="com.ti.ccstudio.buildDefinitions.C2000.Debug.1188552488.main.c" name="main.c" rcbsApplicability="disable" resourcePath="main.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.C2000_22.6.exe.compilerDebug.1339719409.738587740">
+                        <tool id="com.ti.ccstudio.buildDefinitions.C2000_22.6.exe.compilerDebug.1339719409.738587740" name="C2000 Compiler" superClass="com.ti.ccstudio.buildDefinitions.C2000_22.6.exe.compilerDebug.1339719409">
+                            <option id="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.INCLUDE_PATH.278747517" superClass="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.INCLUDE_PATH" valueType="includePath">
+                                <listOptionValue value="${PROJECT_ROOT}"/>
+                                <listOptionValue value="${workspace_loc:/${ProjName}/app/adc_user}"/>
+                                <listOptionValue value="${workspace_loc:/${ProjName}/app/filter_user}"/>
+                                <listOptionValue value="${workspace_loc:/${ProjName}/app/epwm_user}"/>
+                                <listOptionValue value="${workspace_loc:/${ProjName}/include}"/>
+                                <listOptionValue value="${CG_TOOL_ROOT}/include"/>
+                                <listOptionValue value="${workspace_loc:/${ProjName}/app/led-user"/>
+                                <listOptionValue value="${workspace_loc:/${ProjName}/app/relay-user"/>
+                            </option>
+                        </tool>
+                    </fileInfo>
                     <sourceEntries>
                         <entry excluding="cmd/28335_RAM_lnk.cmd|source/DSP2833x_DisInt.asm|source/DSP2833x_SWPrioritizedPieVect.c|source/DSP2833x_SWPrioritizedDefaultIsr.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
                     </sourceEntries>
