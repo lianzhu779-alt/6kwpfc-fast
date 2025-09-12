@@ -4,7 +4,6 @@
  * @brief   主程序文件
  * @author  Kono666
  * @date    2025.09.12
->>>>>>> a0008ecd9d6d73251bd0967cb1cb6244f9b4f7e2
  * @version V1.0
  *
  * @brief   该程序为DSP28x系列微控制器的初始化引导程序。
