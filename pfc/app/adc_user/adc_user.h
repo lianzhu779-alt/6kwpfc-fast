@@ -1,10 +1,9 @@
 /*
  * adc_user.h
- * ÈıÏàµçÑ¹Ô´Äæ±äÆ÷ADC²ÉÑùÓë¿ØÖÆÍ·ÎÄ¼ş (ÒÑĞŞÕı)
+ * ä¸‰ç›¸ç”µå‹æºé€†å˜å™¨ADCé‡‡æ ·ä¸æ§åˆ¶å¤´æ–‡ä»¶ (å·²ä¿®æ­£)
  *
- * ´´½¨ÓÚ: 2025Äê6ÔÂ22ÈÕ
- * ×÷Õß: galaxy kono
- * ĞŞ¸ÄÕß: Gemini AI
+ * åˆ›å»ºäº: 2025å¹´6æœˆ22æ—¥
+ * ä½œè€…: galaxy kono
  */
 
 #ifndef APP_ADC_USER_ADC_USER_H_
@@ -15,156 +14,164 @@
 #include "filter_user.h"
 #include <string.h>
 
-/* ========== ÊıÑ§ÓëÎïÀí³£Á¿¶¨Òå ========== */
-#define PI                  3.14159265358979323846f
-#define SQRT_3              1.73205080756887729353f  // ¡Ì3
-#define SQRT_3_DIV_2        0.86602540378443864676f  // ¡Ì3/2
-#define SQRT_3_DIV_3        0.57735026918962576451f  // ¡Ì3/3
-#define TWO_DIV_3           0.66666666666666666667f  // 2/3
-#define ADC_TO_VOLTAGE      0.00073260073260073260f  // ADC×ª»»ÏµÊı (3.0V / 4095)
+/* ========== æ•°å­¦ä¸ç‰©ç†å¸¸é‡å®šä¹‰ ========== */
+#define PI                   3.14159265358979323846f
+#define SQRT_3               1.73205080756887729353f  // âˆš3
+#define SQRT_3_DIV_2         0.86602540378443864676f  // âˆš3/2
+#define SQRT_3_DIV_3         0.57735026918962576451f  // âˆš3/3
+#define TWO_DIV_3            0.66666666666666666667f  // 2/3
+#define ADC_TO_VOLTAGE       0.00073260073260073260f  // ADCè½¬æ¢ç³»æ•° (3.0V / 4095)
 
-/* ========== ÏµÍ³²ÎÊı¶¨Òå ========== */
-#define SWITCHING_FREQ      10000.0f                 // ¿ª¹ØÆµÂÊ 10kHz
-#define SAMPLING_PERIOD     0.0001f                  // ²ÉÑùÖÜÆÚ Ts = 1/10kHz
-#define PWM_PERIOD_NS       0.000000125f             // PWMÊ±ÖÓÖÜÆÚ(ns), ¸ù¾İÊµ¼ÊPWMÊ±ÖÓµ÷Õû
-#define OUTPUT_VOLTAGE_REF  800.0f                   // Êä³öµçÑ¹»ù×¼Öµ (ÓÃÓÚPLL¹éÒ»»¯)
+/* ========== ç³»ç»Ÿå‚æ•°å®šä¹‰ ========== */
+#define SWITCHING_FREQ       10000.0f                 // å¼€å…³é¢‘ç‡ 10kHz
+#define SAMPLING_PERIOD      0.0001f                  // é‡‡æ ·å‘¨æœŸ Ts = 1/10kHz
+#define PWM_PERIOD_NS        0.000000125f             // PWMæ—¶é’Ÿå‘¨æœŸ(ns), æ ¹æ®å®é™…PWMæ—¶é’Ÿè°ƒæ•´
+#define OUTPUT_VOLTAGE_REF   800.0f                   // è¾“å‡ºç”µå‹åŸºå‡†å€¼ (ç”¨äºPLLå½’ä¸€åŒ–)
+#define SYSCLK_FREQ          150000000.0
+/* ========== PIæ§åˆ¶å™¨å‚æ•° ========== */
+#define KP_VOLTAGE           1.055f
+#define KI_VOLTAGE           0.0002f
+#define KP_CURRENT_D         2.44f
+#define KI_CURRENT_D         0.0019f
+#define KP_CURRENT_Q         2.44f
+#define KI_CURRENT_Q         0.0019f
 
-/* ========== PI¿ØÖÆÆ÷²ÎÊı ========== */
-#define KP_VOLTAGE          1.0f
-#define KI_VOLTAGE          0.015f
-#define KP_CURRENT_D        2.44f
-#define KI_CURRENT_D        0.0019f
-#define KP_CURRENT_Q        2.44f
-#define KI_CURRENT_Q        0.0019f
+/* ========== é™å¹…å‚æ•° ========== */
+#define VOLTAGE_LIMIT_MAX    2.5f * 1
+#define VOLTAGE_LIMIT_MIN    1.7f * 1
+#define CURRENT_D_LIMIT      80.0f
+#define CURRENT_Q_LIMIT      80.0f
 
-/* ========== ÏŞ·ù²ÎÊı ========== */
-#define VOLTAGE_LIMIT_MAX   80.0f
-#define VOLTAGE_LIMIT_MIN   50.0f
-#define CURRENT_D_LIMIT     80.0f
-#define CURRENT_Q_LIMIT     80.0f
+/* ========== æ•°æ®è®°å½•å‚æ•° ========== */
+#define DATA_BUFFER_SIZE     200
 
-/* ========== Êı¾İ¼ÇÂ¼²ÎÊı ========== */
-#define DATA_BUFFER_SIZE    200
+/* ========== PWMæ—¶é’Ÿé…ç½® ========== */
+#define PWM_SYSCLK_FREQ_HZ         150000000UL      // ç³»ç»Ÿæ—¶é’Ÿé¢‘ç‡ 150MHz
+#define PWM_SWITCHING_FREQ_HZ      10000UL          // å¼€å…³é¢‘ç‡ 10kHz
+#define PWM_DEAD_TIME_PERCENT      2                // æ­»åŒºæ—¶é—´ç™¾åˆ†æ¯” 2%
 
-/* ========== PWMÊ±ÖÓÅäÖÃ ========== */
-#define PWM_SYSCLK_FREQ_HZ          150000000UL    // ÏµÍ³Ê±ÖÓÆµÂÊ 150MHz
-#define PWM_SWITCHING_FREQ_HZ       10000UL        // ¿ª¹ØÆµÂÊ 10kHz
-#define PWM_DEAD_TIME_PERCENT       2              // ËÀÇøÊ±¼ä°Ù·Ö±È 2%
-
-/* ========== PWMÖÜÆÚ¼ÆËã ========== */
-// Ôö¼õ¼ÆÊıÄ£Ê½ÏÂ£ºÊµ¼ÊPWMÆµÂÊ = SYSCLK / (2 * TBPRD)
-// Òò´Ë£ºTBPRD = SYSCLK / (2 * Ä¿±êÆµÂÊ)
+/* ========== PWMå‘¨æœŸè®¡ç®— ========== */
+// å¢å‡è®¡æ•°æ¨¡å¼ä¸‹ï¼šå®é™…PWMé¢‘ç‡ = SYSCLK / (2 * TBPRD)
+// å› æ­¤ï¼šTBPRD = SYSCLK / (2 * ç›®æ ‡é¢‘ç‡)
 #define PWM_TBPRD_COUNT            (PWM_SYSCLK_FREQ_HZ / (2 * PWM_SWITCHING_FREQ_HZ))  // 7500
-#define PWM_DEAD_TIME_COUNT        (PWM_TBPRD_COUNT / (100 / PWM_DEAD_TIME_PERCENT))   // 150
+#define PWM_DEAD_TIME_COUNT        (PWM_TBPRD_COUNT / (100 / PWM_DEAD_TIME_PERCENT))    // 150
 
-/* ========== ´øÍ¨ÂË²¨Æ÷½á¹¹Ìå¶¨Òå (À´×Ô´úÂëÒ») ========== */
+/* ========== å¸¦é€šæ»¤æ³¢å™¨ç»“æ„ä½“å®šä¹‰  ========== */
 typedef struct {
-    float a1, a2; // ²î·Ö·½³Ì·ÖÄ¸ÏµÊı y[n-1], y[n-2]
-    float scaled; // Ëõ·ÅÒò×Ó
+    float a1, a2; // å·®åˆ†æ–¹ç¨‹åˆ†æ¯ç³»æ•° y[n-1], y[n-2]
+    float scaled; // ç¼©æ”¾å› å­
 } FilterBandpassData_t;
 
 typedef struct {
-    float x_new;        // µ±Ç°ÊäÈë
-    float x_pre1;       // Ç°Ò»ÅÄÊäÈë
-    float x_pre2;       // Ç°Á½ÅÄÊäÈë
-    float y_new;        // µ±Ç°Êä³ö
-    float y_pre1;       // Ç°Ò»ÅÄÊä³ö
-    float y_pre2;       // Ç°Á½ÅÄÊä³ö
-    float x_new_scaled; // Ëõ·ÅºóµÄµ±Ç°ÊäÈë
+    float x_new;        // å½“å‰è¾“å…¥
+    float x_pre1;       // å‰ä¸€æ‹è¾“å…¥
+    float x_pre2;       // å‰ä¸¤æ‹è¾“å…¥
+    float y_new;        // å½“å‰è¾“å‡º
+    float y_pre1;       // å‰ä¸€æ‹è¾“å‡º
+    float y_pre2;       // å‰ä¸¤æ‹è¾“å‡º
+    float x_new_scaled; // ç¼©æ”¾åçš„å½“å‰è¾“å…¥
 } FilterBandpassState_t;
 
-/* ========== ADCÔ­Ê¼Êı¾İ½á¹¹Ìå ========== */
-// ½ö°üº¬Êµ¼ÊÊ¹ÓÃµÄÍ¨µÀ
+/* ========== ADCåŸå§‹æ•°æ®ç»“æ„ä½“ ========== */
+// ä»…åŒ…å«å®é™…ä½¿ç”¨çš„é€šé“
 typedef struct {
-    float output_voltage;   // Ö±Á÷Êä³öµçÑ¹²ÉÑùÖµ
-    float output_current;   // Ö±Á÷Êä³öµçÁ÷²ÉÑùÖµ
-    float ac_voltage_a;     // AÏà½»Á÷µçÑ¹²ÉÑùÖµ
-    float ac_voltage_b;     // BÏà½»Á÷µçÑ¹²ÉÑùÖµ
-    float ac_voltage_c;     // CÏà½»Á÷µçÑ¹²ÉÑùÖµ
-    float ac_current_a;     // AÏà½»Á÷µçÁ÷²ÉÑùÖµ
-    float ac_current_b;     // BÏà½»Á÷µçÁ÷²ÉÑùÖµ
-    float ac_current_c;     // CÏà½»Á÷µçÁ÷²ÉÑùÖµ
-    float ref_voltage_voltage_165; // 1.65VÆ«ÖÃµçÑ¹²ÉÑùÖµ
-    float ref_voltage_current_165; // 1.65AÆ«ÖÃµçÁ÷²ÉÑù
+    float output_voltage;     // ç›´æµè¾“å‡ºç”µå‹é‡‡æ ·å€¼
+    float output_current;     // ç›´æµè¾“å‡ºç”µæµé‡‡æ ·å€¼
+    float ac_voltage_a;       // Aç›¸äº¤æµç”µå‹é‡‡æ ·å€¼
+    float ac_voltage_b;       // Bç›¸äº¤æµç”µå‹é‡‡æ ·å€¼
+    float ac_voltage_c;       // Cç›¸äº¤æµç”µå‹é‡‡æ ·å€¼
+    float ac_current_a;       // Aç›¸äº¤æµç”µæµé‡‡æ ·å€¼
+    float ac_current_b;       // Bç›¸äº¤æµç”µæµé‡‡æ ·å€¼
+    float ac_current_c;       // Cç›¸äº¤æµç”µæµé‡‡æ ·å€¼
+    float ref_voltage_voltage_165; // 1.65Våç½®ç”µå‹é‡‡æ ·å€¼
+    float ref_voltage_current_165; // 1.65Aåç½®ç”µæµé‡‡æ ·
 
 } AdcRawData_t;
 
-/* ========== ÈıÏà×ø±êÏµ½á¹¹Ìå ========== */
+/* ========== ä¸‰ç›¸åæ ‡ç³»ç»“æ„ä½“ ========== */
 typedef struct {
     float phase_a;
     float phase_b;
     float phase_c;
 } ThreePhase_t;
 
-/* ========== Alpha-Beta¾²Ö¹×ø±êÏµ½á¹¹Ìå ========== */
+/* ========== Alpha-Betaé™æ­¢åæ ‡ç³»ç»“æ„ä½“ ========== */
 typedef struct {
     float alpha;
     float beta;
 } AlphaBeta_t;
 
-/* ========== D-QĞı×ª×ø±êÏµ½á¹¹Ìå ========== */
+/* ========== D-Qæ—‹è½¬åæ ‡ç³»ç»“æ„ä½“ ========== */
 typedef struct {
     float d;
     float q;
 } DqAxis_t;
 
-/* ========== µÍÍ¨ÂË²¨Æ÷×´Ì¬½á¹¹Ìå ========== */
+/* ========== ä½é€šæ»¤æ³¢å™¨çŠ¶æ€ç»“æ„ä½“ ========== */
 typedef struct {
-    float current;      // µ±Ç°ÊäÈë
-    float previous;     // ÉÏÒ»´ÎµÄÊä³ö
-    float filtered;     // ±¾´ÎÂË²¨Êä³ö
+    float current;      // å½“å‰è¾“å…¥
+    float previous;     // ä¸Šä¸€æ¬¡çš„è¾“å‡º
+    float filtered;     // æœ¬æ¬¡æ»¤æ³¢è¾“å‡º
 } FilterState_t;
 
-/* ========== PI¿ØÖÆÆ÷½á¹¹Ìå ========== */
+/* ========== PIæ§åˆ¶å™¨ç»“æ„ä½“ ========== */
 typedef struct {
-    float kp, ki;           // PIÏµÊı
-    float error, error_prev;// Îó²îÓëÇ°Ò»´ÎÎó²î
-    float output;           // ¿ØÖÆÆ÷Êä³ö
-    float max_limit, min_limit; // Êä³öÏŞ·ù
+    float kp, ki;           // PIç³»æ•°
+    float error, error_prev;// è¯¯å·®ä¸å‰ä¸€æ¬¡è¯¯å·®
+    float output;           // æ§åˆ¶å™¨è¾“å‡º
+    float max_limit, min_limit; // è¾“å‡ºé™å¹…
 } PIController_t;
 
-/* ========== PLLËøÏà»·½á¹¹Ìå ========== */
+/* ========== PLLé”ç›¸ç¯ç»“æ„ä½“ ========== */
 typedef struct {
-    float theta;            // Ëø¶¨µÄÏàÎ»½Ç (rad)
-    float omega;            // Ëø¶¨µÄ½ÇÆµÂÊ (rad/s)
-    float sin_wt, cos_wt;   // ÏàÎ»µÄÕıÓàÏÒÖµ
-    // PI¿ØÖÆÆ÷×´Ì¬±äÁ¿ (ÓÃÓÚËøÏà)
+    float theta;            // é”å®šçš„ç›¸ä½è§’ (rad)
+    float omega;            // é”å®šçš„è§’é¢‘ç‡ (rad/s)
+    float sin_wt, cos_wt;   // ç›¸ä½çš„æ­£ä½™å¼¦å€¼
+    float theta_prev;// !!! æ–°å¢æˆå‘˜ !!!
+    float sin_wt_prev;
+    float cos_wt_prev;
+    // PIæ§åˆ¶å™¨çŠ¶æ€å˜é‡ (ç”¨äºé”ç›¸)
 //    float pi_state_1, pi_state_2, pi_prev;
-    float pi_integrator_state; // ÓÃÓÚ»ı·ÖÆ÷ÀÛ¼Ó
-    float pi_output;           // PI¿ØÖÆÆ÷µÄ×ÜÊä³ö (¦¤¦Ø)
-    float error_prev;          // ÓÃÓÚÔöÁ¿Ê½PI¼ÆËã»òµ÷ÊÔ
+    float pi_integrator_state; // ç”¨äºç§¯åˆ†å™¨ç´¯åŠ 
+    float pi_output;           // PIæ§åˆ¶å™¨çš„æ€»è¾“å‡º (Î”Ï‰)
+    float error_prev;          // ç”¨äºå¢é‡å¼PIè®¡ç®—æˆ–è°ƒè¯•
 } PLL_t;
 
-/* ========== SVPWM½á¹¹Ìå ========== */
+/* ========== SVPWMç»“æ„ä½“ ========== */
 typedef struct {
-    float duty_a, duty_b,duty_c;         // Õ¼¿Õ±È
-//    float t1, t2;           // »ù´¡Ê¸Á¿×÷ÓÃÊ±¼ä
-    float ta, tb, tc;       // ÈıÏàPWM²¨ĞÎ±È½ÏÊ±¼ä
-    float tcm1, tcm2, tcm3; // PWM±È½Ï¼Ä´æÆ÷Öµ
+    float duty_a, duty_b,duty_c;        // å ç©ºæ¯”
+//    float t1, t2;           // åŸºç¡€çŸ¢é‡ä½œç”¨æ—¶é—´
+    float ta, tb, tc;       // ä¸‰ç›¸PWMæ³¢å½¢æ¯”è¾ƒæ—¶é—´
+    float tcm1, tcm2, tcm3; // PWMæ¯”è¾ƒå¯„å­˜å™¨å€¼
     float ua,ub,uc;
     float vm_amplitude,modulation_index,phase_angle;
 } SVPWM_t;
 
-/* ========== Ö÷¿ØÖÆÏµÍ³½á¹¹Ìå ========== */
+/* ========== ä¸»æ§åˆ¶ç³»ç»Ÿç»“æ„ä½“ ========== */
 typedef struct {
-    // Ô­Ê¼²ÉÑùÊı¾İ
+    // åŸå§‹é‡‡æ ·æ•°æ®
     AdcRawData_t adc_raw;
 
-    // ×ª»»ÎªÎïÀíµ¥Î»µÄµçÑ¹µçÁ÷Öµ
+    // è½¬æ¢ä¸ºç‰©ç†å•ä½çš„ç”µå‹ç”µæµå€¼
     ThreePhase_t voltage;
     ThreePhase_t current;
 
-    // ¾­¹ı´øÍ¨ÂË²¨ºóµÄµçÑ¹µçÁ÷Öµ (ÓÃÓÚ¿ØÖÆ)
+    // ç»è¿‡å¸¦é€šæ»¤æ³¢åçš„ç”µå‹ç”µæµå€¼ (ç”¨äºæ§åˆ¶)
     ThreePhase_t voltage_filtered;
     ThreePhase_t current_filtered;
 
-    // ×ø±ê±ä»»½á¹û
+
+    //é‡‡é›†çš„æ¯çº¿ç”µå‹çš„è½¬æ¢ç»“æœ
+    AlphaBeta_t voltage_raw_ab;
+    DqAxis_t voltage_raw_dq;
+
+    // åæ ‡å˜æ¢ç»“æœ
     AlphaBeta_t voltage_ab;
     AlphaBeta_t current_ab;
     DqAxis_t voltage_dq;
     DqAxis_t current_dq;
 
-    // Ö±Á÷ĞÅºÅµÍÍ¨ÂË²¨Æ÷
+    // ç›´æµä¿¡å·ä½é€šæ»¤æ³¢å™¨
     FilterState_t filter_vo;
     FilterState_t filter_io;
     FilterState_t filter_v165_current;
@@ -172,67 +179,75 @@ typedef struct {
 
     float filter_VDC;
 
-    // ½»Á÷ĞÅºÅ´øÍ¨ÂË²¨Æ÷
+    // äº¤æµä¿¡å·å¸¦é€šæ»¤æ³¢å™¨
     FilterBandpassData_t  bp_coeffs;
     FilterBandpassState_t bp_va, bp_vb, bp_vc;
     FilterBandpassState_t bp_ia, bp_ib, bp_ic;
 
-    // ËøÏà»·ÄÚ²¿Ê¹ÓÃµÄÂË²¨Æ÷
+    // é”ç›¸ç¯å†…éƒ¨ä½¿ç”¨çš„æ»¤æ³¢å™¨
     FilterState_t filter_vpd;
     FilterState_t filter_vpq;
     FilterState_t filter_vnd;
     FilterState_t filter_vnq;
 
-    // PI¿ØÖÆÆ÷
+    // PIæ§åˆ¶å™¨
     PIController_t pi_voltage;
     PIController_t pi_current_d;
     PIController_t pi_current_q;
 
-    // ËøÏà»·
+    // é”ç›¸ç¯
     PLL_t pll;
 
     // SVPWM
     SVPWM_t svpwm;
 
-    // ¿ØÖÆ»·Â·²Î¿¼Öµ
+    // æ§åˆ¶ç¯è·¯å‚è€ƒå€¼
     float voltage_ref;
     float current_d_ref;
     float current_q_ref;
 
-    // ¿ØÖÆÆ÷Êä³öµÄÖ¸ÁîµçÑ¹
+    // æ§åˆ¶å™¨è¾“å‡ºçš„æŒ‡ä»¤ç”µå‹
     DqAxis_t voltage_cmd;
     AlphaBeta_t voltage_ab_cmd;
 
+    // --- æ–°å¢è½¯å¯åŠ¨ç›¸å…³å˜é‡ ---
+    float voltage_ref_final;      // æœ€ç»ˆçš„ç›®æ ‡ç”µå‹ (ä¾‹å¦‚ 800.0f)
+    float voltage_ref_start;      // è½¯å¯åŠ¨çš„èµ·å§‹ç”µå‹ (ä¾‹å¦‚ 540.0f)
+    float voltage_ramp_increment;   // æ¯ä¸ªä¸­æ–­å‘¨æœŸçš„ç”µå‹å¢é‡
+    int soft_start_complete;      // è½¯å¯åŠ¨å®Œæˆæ ‡å¿— (0: è¿›è¡Œä¸­, 1: å·²å®Œæˆ)
+
 } ControlSystem_t;
 
-/* ========== Êı¾İ¼ÇÂ¼½á¹¹Ìå (µ÷ÊÔÓÃ) ========== */
+/* ========== æ•°æ®è®°å½•ç»“æ„ä½“ (è°ƒè¯•ç”¨) ========== */
 typedef struct {
     float cos_wt[DATA_BUFFER_SIZE];
     float current_a[DATA_BUFFER_SIZE];
     float voltage_a[DATA_BUFFER_SIZE];
     float current_d[DATA_BUFFER_SIZE];
     float voltage_positive_q[DATA_BUFFER_SIZE];
+    float current_dq_q[DATA_BUFFER_SIZE];
+    float filter_VDC[DATA_BUFFER_SIZE];
     Uint16 index;
 } DataLogger_t;
 
-/* ========== È«¾Ö±äÁ¿ÉùÃ÷ ========== */
+/* ========== å…¨å±€å˜é‡å£°æ˜ ========== */
 extern ControlSystem_t g_control_system;
 extern DataLogger_t g_data_logger;
 
-/* ========== º¯ÊıÉùÃ÷ ========== */
-void adc_config(void);
+/* ========== å‡½æ•°å£°æ˜ ========== */
+void ADC_Init(void);
 interrupt void adc_isr(void);
 void control_system_init(void);
 
-/* ========== ÄÚÁªº¯Êı ========== */
-// ÏŞ·ùº¯Êı
+/* ========== å†…è”å‡½æ•° ========== */
+// é™å¹…å‡½æ•°
 static inline float saturate(float value, float min, float max) {
     if (value > max) return max;
     if (value < min) return min;
     return value;
 }
 
-// ½Ç¶È¹éÒ»»¯µ½ [0, 2*PI)
+// è§’åº¦å½’ä¸€åŒ–åˆ° [0, 2*PI)
 static inline float normalize_angle(float angle) {
     while (angle >= (2.0f * PI)) angle -= (2.0f * PI);
     while (angle < 0.0f) angle += (2.0f * PI);

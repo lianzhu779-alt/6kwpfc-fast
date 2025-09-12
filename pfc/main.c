@@ -19,14 +19,14 @@ extern Uint16 RamfuncsLoadSize;
 
 
 
-//NÏà¼ÌµçÆ÷
+//Nï¿½ï¿½Ìµï¿½ï¿½ï¿½
 void RELAYB_config(void)
 {
     EALLOW;
     GpioCtrlRegs.GPAMUX1.bit.GPIO0=0;//io
-    GpioCtrlRegs.GPADIR.bit.GPIO0=1;//Êä³ö
-    GpioCtrlRegs.GPAPUD.bit.GPIO0=0;//Ê¹ÄÜÉÏÀ­
-    GpioDataRegs.GPASET.bit.GPIO0=1;//ÉÏÀ­
+    GpioCtrlRegs.GPADIR.bit.GPIO0=1;//ï¿½ï¿½ï¿½
+    GpioCtrlRegs.GPAPUD.bit.GPIO0=0;//Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    GpioDataRegs.GPASET.bit.GPIO0=1;//ï¿½ï¿½ï¿½ï¿½
     EDIS;
 }
 //void Delay()
@@ -38,15 +38,15 @@ void RELAYB_config(void)
 //}
 
 
-//¼ÌµçÆ÷ÅäÖÃ
-//AC£¬ABÏà¼ÌµçÆ÷
+//ï¿½Ìµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//ACï¿½ï¿½ABï¿½ï¿½Ìµï¿½ï¿½ï¿½
 //void RELAYA_config(void)
 //{
 //    EALLOW;
 //    GpioCtrlRegs.GPAMUX1.bit.GPIO8=0;//io
-//    GpioCtrlRegs.GPADIR.bit.GPIO8=1;//Êä³ö
-//    GpioCtrlRegs.GPAPUD.bit.GPIO8=0;//Ê¹ÄÜÉÏÀ­
-//    GpioDataRegs.GPASET.bit.GPIO8=1;//ÉÏÀ­
+//    GpioCtrlRegs.GPADIR.bit.GPIO8=1;//ï¿½ï¿½ï¿½
+//    GpioCtrlRegs.GPAPUD.bit.GPIO8=0;//Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//    GpioDataRegs.GPASET.bit.GPIO8=1;//ï¿½ï¿½ï¿½ï¿½
 //    EDIS;
 //}
 
@@ -55,21 +55,21 @@ void RELAYB_config(void)
 void main()
 {
 
-    InitSysCtrl();   //ÏµÍ³³õÊ¼»¯
+    InitSysCtrl();   //ÏµÍ³ï¿½ï¿½Ê¼ï¿½ï¿½
 
-    memcpy(&RamfuncsRunStart, &RamfuncsLoadStart, (size_t)&RamfuncsLoadSize);//Õâ¼¸¾äÊÇ½«FLASHÖÐµÄ³ÌÐòCOPYµ½RAMÖÐÔËÐÐ£¬Í¨³£µÄÄ¿µÄÊÇ¼Ó¿ì³ÌÐòµÄÔËÐÐËÙ¶È£¬Ö®ºóµÄ³ÌÐòÔËÐÐÊ±£¬
-                                                                     //Ö»Òªµ÷ÓÃFLASHÖÐRamfuncsLoadStartµØÖ·¿ªÊ¼µÄÏà¹Øº¯Êý£¬ÏµÍ³¶¼»á×Ô¶¯µØÖ¸ÏòRAMÖÐÏàÓ¦µÄº¯ÊýÈë¿ÚµØÖ·ÔËÐÐ¡£
+    memcpy(&RamfuncsRunStart, &RamfuncsLoadStart, (size_t)&RamfuncsLoadSize);//ï¿½â¼¸ï¿½ï¿½ï¿½Ç½ï¿½FLASHï¿½ÐµÄ³ï¿½ï¿½ï¿½COPYï¿½ï¿½RAMï¿½ï¿½ï¿½ï¿½ï¿½Ð£ï¿½Í¨ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½Ç¼Ó¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È£ï¿½Ö®ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
+                                                                     //Ö»Òªï¿½ï¿½ï¿½ï¿½FLASHï¿½ï¿½RamfuncsLoadStartï¿½ï¿½Ö·ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Øºï¿½ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½RAMï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Äºï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½Ö·ï¿½ï¿½ï¿½Ð¡ï¿½
     InitFlash();
-    InitAdc();//adc³õÊ¼»¯
-    DINT;          //¹Ø±ÕÈ«¾ÖÖÐ¶Ï
-    EALLOW;        //ÖÐ¶ÏÊ¹ÄÜ
-    PieCtrlRegs.PIECTRL.bit.ENPIE=1;    //°áÇ¨ÖÐ¶ÏÊ¸Á¿±í
-    PieCtrlRegs.PIEIER1.bit.INTx1= 1;     //PIEÖÐµÚn¸öÐ¡ÖÐ¶ÎÊ¹ÄÜ
-    AdcRegs.ADCTRL2.bit.EPWM_SOCA_SEQ1=1; //ÔÊÐíePWMµÄ´¥·¢ÐÅºÅÆô¶¯SEQ1
-    AdcRegs.ADCTRL2.bit.INT_ENA_SEQ1=1;             //ÆôÓÃSEQ1ÖÐ¶Ï(ÍâÉèÖÐ¶Ï)
-    //  AdcRegs.ADCTRL2.bit.INT_MOD_SEQ1=0;       //ÔÚÃ¿¸öSEQ1×ª»»½áÊøºó²úÉúÖÐ¶Ï
+    InitAdc();//adcï¿½ï¿½Ê¼ï¿½ï¿½
+    DINT;          //ï¿½Ø±ï¿½È«ï¿½ï¿½ï¿½Ð¶ï¿½
+    EALLOW;        //ï¿½Ð¶ï¿½Ê¹ï¿½ï¿½
+    PieCtrlRegs.PIECTRL.bit.ENPIE=1;    //ï¿½ï¿½Ç¨ï¿½Ð¶ï¿½Ê¸ï¿½ï¿½ï¿½ï¿½
+    PieCtrlRegs.PIEIER1.bit.INTx1= 1;     //PIEï¿½Ðµï¿½nï¿½ï¿½Ð¡ï¿½Ð¶ï¿½Ê¹ï¿½ï¿½
+    AdcRegs.ADCTRL2.bit.EPWM_SOCA_SEQ1=1; //ï¿½ï¿½ï¿½ï¿½ePWMï¿½Ä´ï¿½ï¿½ï¿½ï¿½Åºï¿½ï¿½ï¿½ï¿½ï¿½SEQ1
+    AdcRegs.ADCTRL2.bit.INT_ENA_SEQ1=1;             //ï¿½ï¿½ï¿½ï¿½SEQ1ï¿½Ð¶ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½)
+    //  AdcRegs.ADCTRL2.bit.INT_MOD_SEQ1=0;       //ï¿½ï¿½Ã¿ï¿½ï¿½SEQ1×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½
     IER=0x0001;
-    PieVectTable.SEQ1INT=&adc_isr;//¿ªÈ«¾ÖÖÐ¶Ï
+    PieVectTable.SEQ1INT=&adc_isr;//ï¿½ï¿½È«ï¿½ï¿½ï¿½Ð¶ï¿½
     EDIS;
     EINT;
 
@@ -77,14 +77,14 @@ void main()
 
 //    EALLOW;
 //        GpioCtrlRegs.GPAMUX1.bit.GPIO1=0;//io
-//        GpioCtrlRegs.GPADIR.bit.GPIO1=1;//Êä³ö
-//        GpioCtrlRegs.GPAPUD.bit.GPIO1=0;//Ê¹ÄÜÉÏÀ­
-//        GpioDataRegs.GPASET.bit.GPIO1=1;//ÉÏÀ­
+//        GpioCtrlRegs.GPADIR.bit.GPIO1=1;//ï¿½ï¿½ï¿½
+//        GpioCtrlRegs.GPAPUD.bit.GPIO1=0;//Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//        GpioDataRegs.GPASET.bit.GPIO1=1;//ï¿½ï¿½ï¿½ï¿½
 //    EDIS;
-    RELAYB_config();//¼ÌµçÆ÷Æô¶¯
+    RELAYB_config();//ï¿½Ìµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 
-    adc_config();//±Õ»·
+    ADC_Init();//ï¿½Õ»ï¿½
 
     InitEPwm2Gpio();
     InitEPwm3Gpio();
@@ -104,24 +104,24 @@ void main()
 
     EALLOW;
     GpioCtrlRegs.GPAMUX1.bit.GPIO14=0;//io
-    GpioCtrlRegs.GPADIR.bit.GPIO14=1;//Êä³ö
-    GpioCtrlRegs.GPAPUD.bit.GPIO14=0;//ÉÏÀ­
-    GpioDataRegs.GPASET.bit.GPIO14=1;//Êä³öµÍµçÆ½
+    GpioCtrlRegs.GPADIR.bit.GPIO14=1;//ï¿½ï¿½ï¿½
+    GpioCtrlRegs.GPAPUD.bit.GPIO14=0;//ï¿½ï¿½ï¿½ï¿½
+    GpioDataRegs.GPASET.bit.GPIO14=1;//ï¿½ï¿½ï¿½ï¿½Íµï¿½Æ½
 
     GpioCtrlRegs.GPAMUX1.bit.GPIO15=0;//io
-    GpioCtrlRegs.GPADIR.bit.GPIO15=1;//Êä³ö
-    GpioCtrlRegs.GPAPUD.bit.GPIO15=0;//ÉÏÀ­
-    GpioDataRegs.GPASET.bit.GPIO15=1;//Êä³öµÍµçÆ½
+    GpioCtrlRegs.GPADIR.bit.GPIO15=1;//ï¿½ï¿½ï¿½
+    GpioCtrlRegs.GPAPUD.bit.GPIO15=0;//ï¿½ï¿½ï¿½ï¿½
+    GpioDataRegs.GPASET.bit.GPIO15=1;//ï¿½ï¿½ï¿½ï¿½Íµï¿½Æ½
 
 //    GpioCtrlRegs.GPAMUX1.bit.GPIO0=0;       //io
-//    GpioCtrlRegs.GPADIR.bit.GPIO0=1;        //Êä³ö
-//    GpioCtrlRegs.GPAPUD.bit.GPIO0=0;        //ÉÏÀ­
-//    GpioDataRegs.GPASET.bit.GPIO0=1;        //ÉÏÀ­
+//    GpioCtrlRegs.GPADIR.bit.GPIO0=1;        //ï¿½ï¿½ï¿½
+//    GpioCtrlRegs.GPAPUD.bit.GPIO0=0;        //ï¿½ï¿½ï¿½ï¿½
+//    GpioDataRegs.GPASET.bit.GPIO0=1;        //ï¿½ï¿½ï¿½ï¿½
 
 //    GpioCtrlRegs.GPAMUX1.bit.GPIO1=0;       //io
-//    GpioCtrlRegs.GPADIR.bit.GPIO1=1;        //Êä³ö
-//    GpioCtrlRegs.GPAPUD.bit.GPIO1=0;        //ÉÏÀ­
-//    GpioDataRegs.GPASET.bit.GPIO1=1;        //ÉÏÀ­
+//    GpioCtrlRegs.GPADIR.bit.GPIO1=1;        //ï¿½ï¿½ï¿½
+//    GpioCtrlRegs.GPAPUD.bit.GPIO1=0;        //ï¿½ï¿½ï¿½ï¿½
+//    GpioDataRegs.GPASET.bit.GPIO1=1;        //ï¿½ï¿½ï¿½ï¿½
    EDIS;
 
     while(1)

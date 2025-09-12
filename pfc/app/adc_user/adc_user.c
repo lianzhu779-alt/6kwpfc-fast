@@ -1,221 +1,224 @@
 /*
  * =====================================================================================
  *
- * ÎÄ¼ş:  adc_user.c
+ * æ–‡ä»¶:  adc_user.c
  *
- * ËµÃ÷:  ÈıÏàµçÑ¹Ô´Äæ±äÆ÷ADC²ÉÑùÓë¿ØÖÆºËĞÄÊµÏÖÎÄ¼ş¡£
- * ±¾ÎÄ¼ş¾­¹ıÖØ¹¹£¬ÒÔ½â¾ö±àÒë´íÎó²¢ÓÅ»¯ĞÅºÅ´¦ÀíÁ÷³Ì¡£
- * ¼¯³ÉÁË´úÂëÒ»µÄ¶ş½×´øÍ¨ÂË²¨Æ÷£¬ÒÔÌæ´úÔ­ÓĞµÄµÍÍ¨ÂË²¨·½°¸£¬
- * ´Ó¶ø¸ü¾«È·µØÌáÈ¡»ù²¨ĞÅºÅ£¬Ìá¸ßËøÏà»·ºÍ¿ØÖÆÏµÍ³µÄĞÔÄÜ¡£
+ * è¯´æ˜:  ä¸‰ç›¸ç”µå‹æºé€†å˜å™¨ADCé‡‡æ ·ä¸æ§åˆ¶æ ¸å¿ƒå®ç°æ–‡ä»¶ã€‚
+ * æœ¬æ–‡ä»¶ç»è¿‡é‡æ„ï¼Œä»¥è§£å†³ç¼–è¯‘é”™è¯¯å¹¶ä¼˜åŒ–ä¿¡å·å¤„ç†æµç¨‹ã€‚
+ * é›†æˆäº†ä»£ç ä¸€çš„äºŒé˜¶å¸¦é€šæ»¤æ³¢å™¨ï¼Œä»¥æ›¿ä»£åŸæœ‰çš„ä½é€šæ»¤æ³¢æ–¹æ¡ˆï¼Œ
+ * ä»è€Œæ›´ç²¾ç¡®åœ°æå–åŸºæ³¢ä¿¡å·ï¼Œæé«˜é”ç›¸ç¯å’Œæ§åˆ¶ç³»ç»Ÿçš„æ€§èƒ½ã€‚
  *
- * ´´½¨ÓÚ:  2025Äê6ÔÂ22ÈÕ
- * ×÷Õß:  galaxy kono
- * ĞŞ¸ÄÕß:  Gemini AI
+ * åˆ›å»ºäº:  2025å¹´6æœˆ22æ—¥
+ * ä½œè€…:  galaxy kono
  *
  * =====================================================================================
  */
 
 #include "adc_user.h"
-#include "filter_user.h" // È·±£°üº¬ÁËfilter_1_xºÍfilter_2_xµÄ¶¨Òå
+#include "filter_user.h" // ç¡®ä¿åŒ…å«äº†filter_1_xå’Œfilter_2_xçš„å®šä¹‰
 
-/* ========== È«¾Ö±äÁ¿¶¨Òå ========== */
-// ¶¨ÒåÈ«¾ÖµÄ¿ØÖÆÏµÍ³½á¹¹ÌåÊµÀı£¬ÓÃÓÚ´æ´¢ËùÓĞ¿ØÖÆÏà¹ØµÄ±äÁ¿
+/* ========== å…¨å±€å˜é‡å®šä¹‰ ========== */
+// å®šä¹‰å…¨å±€çš„æ§åˆ¶ç³»ç»Ÿç»“æ„ä½“å®ä¾‹ï¼Œç”¨äºå­˜å‚¨æ‰€æœ‰æ§åˆ¶ç›¸å…³çš„å˜é‡
 ControlSystem_t g_control_system = {0};
-// ¶¨ÒåÈ«¾ÖµÄÊı¾İ¼ÇÂ¼½á¹¹ÌåÊµÀı£¬ÓÃÓÚµ÷ÊÔºÍ²¨ĞÎ¹Û²â
+// å®šä¹‰å…¨å±€çš„æ•°æ®è®°å½•ç»“æ„ä½“å®ä¾‹ï¼Œç”¨äºè°ƒè¯•å’Œæ³¢å½¢è§‚æµ‹
 DataLogger_t g_data_logger = {0};
 
-/* ========== ¾²Ì¬º¯Êı£¨ÄÚ²¿º¯Êı£©ÉùÃ÷ ========== */
-// Ó²¼ş²ãÓëĞÅºÅÔ¤´¦Àí
-static void adc_read_channels(void);            // ´ÓADC¼Ä´æÆ÷¶ÁÈ¡¸÷Í¨µÀµÄÔ­Ê¼Öµ
-static void apply_dc_filters(void);             // ¶ÔÖ±Á÷ĞÅºÅ£¨Èç1.65VÆ«ÖÃ£©½øĞĞµÍÍ¨ÂË²¨
-static void apply_offset_and_gain(void);        // ¼õÈ¥Ö±Á÷Æ«ÖÃ²¢Ó¦ÓÃÔöÒæ£¬×ª»»ÎªÕæÊµÎïÀíµ¥Î»
-static void apply_bandpass_filters(void);       // ¶Ô½»Á÷ĞÅºÅ½øĞĞ´øÍ¨ÂË²¨£¬ÌáÈ¡»ù²¨
+/* ========== é™æ€å‡½æ•°ï¼ˆå†…éƒ¨å‡½æ•°ï¼‰å£°æ˜ ========== */
+// ç¡¬ä»¶å±‚ä¸ä¿¡å·é¢„å¤„ç†
+static void adc_read_channels(void);            // ä»ADCå¯„å­˜å™¨è¯»å–å„é€šé“çš„åŸå§‹å€¼
+static void apply_dc_filters(void);             // å¯¹ç›´æµä¿¡å·ï¼ˆå¦‚1.65Våç½®ï¼‰è¿›è¡Œä½é€šæ»¤æ³¢
+static void apply_offset_and_gain(void);        // å‡å»ç›´æµåç½®å¹¶åº”ç”¨å¢ç›Šï¼Œè½¬æ¢ä¸ºçœŸå®ç‰©ç†å•ä½
+static void apply_bandpass_filters(void);       // å¯¹äº¤æµä¿¡å·è¿›è¡Œå¸¦é€šæ»¤æ³¢ï¼Œæå–åŸºæ³¢
 
-// ¿ØÖÆËã·¨ºËĞÄ
-static void pll_process(void);                  // ËøÏà»·£¨PLL£©´¦Àí£¬ÓÃÓÚÍ¬²½µçÍøÏàÎ»ºÍÆµÂÊ
-static void clarke_transform(void);             // Clarke±ä»» (abc -> ¦Á¦Â)
-static void park_transform(void);               // Park±ä»» (¦Á¦Â -> dq)
-static void pi_control_process(void);           // Ë«±Õ»·PI¿ØÖÆÆ÷´¦Àí£¨µçÑ¹Íâ»·£¬µçÁ÷ÄÚ»·£©
-static void inverse_park_transform(void);       // ÄæPark±ä»» (dq -> ¦Á¦Â)
-static void svpwm_process(void);                // SVPWMµ÷ÖÆËã·¨£¬Éú³ÉPWMÕ¼¿Õ±È
-static void update_pwm_compare(void);           // ½«¼ÆËã³öµÄÕ¼¿Õ±È¸üĞÂµ½PWMÓ²¼ş¼Ä´æÆ÷
+// æ§åˆ¶ç®—æ³•æ ¸å¿ƒ
+static void pll_process(void);                  // é”ç›¸ç¯ï¼ˆPLLï¼‰å¤„ç†ï¼Œç”¨äºåŒæ­¥ç”µç½‘ç›¸ä½å’Œé¢‘ç‡
+static void clarke_transform(void);             // Clarkeå˜æ¢ (abc -> Î±Î²)
+static void park_transform(void);               // Parkå˜æ¢ (Î±Î² -> dq)
+static void pi_control_process(void);           // åŒé—­ç¯PIæ§åˆ¶å™¨å¤„ç†ï¼ˆç”µå‹å¤–ç¯ï¼Œç”µæµå†…ç¯ï¼‰
+static void inverse_park_transform(void);       // é€†Parkå˜æ¢ (dq -> Î±Î²)
+static void svpwm_process(void);                // SVPWMè°ƒåˆ¶ç®—æ³•ï¼Œç”ŸæˆPWMå ç©ºæ¯”
+static void update_pwm_compare(void);           // å°†è®¡ç®—å‡ºçš„å ç©ºæ¯”æ›´æ–°åˆ°PWMç¡¬ä»¶å¯„å­˜å™¨
 
-// ¸¨ÖúÓë³õÊ¼»¯
-static void data_logging(void);                 // Êı¾İ¼ÇÂ¼£¬ÓÃÓÚµ÷ÊÔ
-static void init_bandpass_filter_coeffs(FilterBandpassData_t *filter_data); // ³õÊ¼»¯´øÍ¨ÂË²¨Æ÷ÏµÊı
-static float filter_bandpass(float x_new, FilterBandpassState_t *filter, const FilterBandpassData_t *filter_data); // ´øÍ¨ÂË²¨Æ÷ÊµÏÖ
-static void floating_pin_protection(void);
+// è¾…åŠ©ä¸åˆå§‹åŒ–
+static void data_logging(void);                 // æ•°æ®è®°å½•ï¼Œç”¨äºè°ƒè¯•
+static void init_bandpass_filter_coeffs(FilterBandpassData_t *filter_data); // åˆå§‹åŒ–å¸¦é€šæ»¤æ³¢å™¨ç³»æ•°
+static float filter_bandpass(float x_new, FilterBandpassState_t *filter, const FilterBandpassData_t *filter_data); // å¸¦é€šæ»¤æ³¢å™¨å®ç°
 static Uint32 duty_to_pwm_register(float duty_ratio);
+static void soft_start_process(void);
 
 /*
  *--------------------------------------------------------------------------------------
- * º¯Êı:  adc_config
- * ËµÃ÷:  ÅäÖÃADCÄ£¿é¡£´Ëº¯ÊıÓëÓ²¼ş½ôÃÜÏà¹Ø£¬¸ù¾İÊµ¼ÊµçÂ·Á¬½ÓÅäÖÃADCÍ¨µÀºÍ²ÉÑùÄ£Ê½¡£
+ * å‡½æ•°:  adc_config
+ * è¯´æ˜:  é…ç½®ADCæ¨¡å—ã€‚æ­¤å‡½æ•°ä¸ç¡¬ä»¶ç´§å¯†ç›¸å…³ï¼Œæ ¹æ®å®é™…ç”µè·¯è¿æ¥é…ç½®ADCé€šé“å’Œé‡‡æ ·æ¨¡å¼ã€‚
  *--------------------------------------------------------------------------------------
  */
-void adc_config(void)
+void ADC_Init(void)
 {
-    EALLOW; // ÔÊĞí·ÃÎÊÊÜ±£»¤µÄ¼Ä´æÆ÷
+    InitAdc();
+    EALLOW; // å…è®¸è®¿é—®å—ä¿æŠ¤çš„å¯„å­˜å™¨
 
-    // ÅäÖÃADCÊ±ÖÓ: ADCCLK = HSPCLK / 1 = 150MHz / 1 = 150MHz
-    // ×¢Òâ: ¸ù¾İDSPĞÍºÅºÍÏµÍ³Ê±ÖÓ£¬ADCCLKÍ¨³£ĞèÒª·ÖÆµÒÔÂú×ãADC¹æ¸ñÒªÇó£¨Èç<=25MHz£©
-    // ÕâÀï¼ÙÉèSysCtrlRegs.HISPCP.allÒÑÔÚ±ğ´¦ÕıÈ·ÅäÖÃ£¬ÀıÈçÎª3£¬ÔòADCCLK=25MHz
+    // é…ç½®ADCæ—¶é’Ÿ: ADCCLK = HSPCLK / 1 = 150MHz / 1 = 150MHz
+    // æ³¨æ„: æ ¹æ®DSPå‹å·å’Œç³»ç»Ÿæ—¶é’Ÿï¼ŒADCCLKé€šå¸¸éœ€è¦åˆ†é¢‘ä»¥æ»¡è¶³ADCè§„æ ¼è¦æ±‚ï¼ˆå¦‚<=25MHzï¼‰
+    // è¿™é‡Œå‡è®¾SysCtrlRegs.HISPCP.allå·²åœ¨åˆ«å¤„æ­£ç¡®é…ç½®ï¼Œä¾‹å¦‚ä¸º3ï¼Œåˆ™ADCCLK=25MHz
     // SysCtrlRegs.HISPCP.all = 3;
-    SysCtrlRegs.HISPCP.all= 3;                  //HSPCLK 3·ÖÆµ 150M/3=50M
+    SysCtrlRegs.HISPCP.all= 3;                  //HSPCLK 3åˆ†é¢‘ 150M/3=50M
 
-    AdcRegs.ADCTRL1.bit.ACQ_PS=5;               //²ÉÑùÊ±¼ä
-    AdcRegs.ADCTRL1.bit.CPS=0;                  //ÍâÉèÊ±ÖÓ²»·ÖÆµ
-    AdcRegs.ADCTRL3.bit.ADCCLKPS=0;             //¶ş·ÖÆµ ADCLK=HSPCLK/2=25MHz
+    AdcRegs.ADCTRL1.bit.ACQ_PS=5;               //é‡‡æ ·æ—¶é—´
+    AdcRegs.ADCTRL1.bit.CPS=0;                  //å¤–è®¾æ—¶é’Ÿä¸åˆ†é¢‘
+    AdcRegs.ADCTRL3.bit.ADCCLKPS=0;             //äºŒåˆ†é¢‘ ADCLK=HSPCLK/2=25MHz
 
-    AdcRegs.ADCTRL1.bit.CONT_RUN=0;//¶ÁÈ¡Íê×ª»»ĞòÁĞºóÍ£Ö¹
-    AdcRegs.ADCTRL3.bit.SMODE_SEL=0;//Ë³Ğò²ÉÑùÄ£Ê½
-    AdcRegs.ADCTRL1.bit.SEQ_CASC=1;//¼¶ÁªÅÅĞòÆ÷Ä£Ê½
+    AdcRegs.ADCTRL1.bit.CONT_RUN=0;//è¯»å–å®Œè½¬æ¢åºåˆ—ååœæ­¢
+    AdcRegs.ADCTRL3.bit.SMODE_SEL=0;//é¡ºåºé‡‡æ ·æ¨¡å¼
+    AdcRegs.ADCTRL1.bit.SEQ_CASC=1;//çº§è”æ’åºå™¨æ¨¡å¼
 
-    AdcRegs.ADCMAXCONV.bit.MAX_CONV1=12;//Õâ¸öÊı×ÖÒª±ÈÓÃµ½µÄ²ÉÑùÍ¨µÀ¶àÒ»¸ö
+    AdcRegs.ADCMAXCONV.bit.MAX_CONV1=12;//è¿™ä¸ªæ•°å­—è¦æ¯”ç”¨åˆ°çš„é‡‡æ ·é€šé“å¤šä¸€ä¸ª
 
-    // --- ÅäÖÃADC²ÉÑùÍ¨µÀ (¸ù¾İÊµ¼ÊÓ²¼şÁ¬½Ó) ---
-    AdcRegs.ADCCHSELSEQ1.bit.CONV00 = 0x0B; // Í¨µÀ0²ÉÑùADCINB3 -> VO (Ö±Á÷Êä³öµçÑ¹)
-    AdcRegs.ADCCHSELSEQ1.bit.CONV01 = 0x0A; // Í¨µÀ1²ÉÑùADCINB3 -> IO (Ö±Á÷Êä³öµçÑ¹)
-    AdcRegs.ADCCHSELSEQ1.bit.CONV02 = 0xC;  //ÉèÖÃÍ¨µÀ2×÷ÎªµÚ3¸ö±ä»»--1.65V£¬µçÑ¹1.65
-    AdcRegs.ADCCHSELSEQ1.bit.CONV03 = 0xC;  //ÉèÖÃÍ¨µÀ3×÷ÎªµÚ4¸ö±ä»»--1.65A£¬µçÁ÷1.65
+    // --- é…ç½®ADCé‡‡æ ·é€šé“ (æ ¹æ®å®é™…ç¡¬ä»¶è¿æ¥) ---
+    AdcRegs.ADCCHSELSEQ1.bit.CONV00 = 0x0B; // é€šé“0é‡‡æ ·ADCINB3 -> VO (ç›´æµè¾“å‡ºç”µå‹)
+    AdcRegs.ADCCHSELSEQ1.bit.CONV01 = 0x0A; // é€šé“1é‡‡æ ·ADCINB3 -> IO (ç›´æµè¾“å‡ºç”µå‹)
+    AdcRegs.ADCCHSELSEQ1.bit.CONV02 = 0xC;  //é€šé“2ä½œä¸ºADCINB4 -> 1.65V (åç½®ç”µå‹)
+    AdcRegs.ADCCHSELSEQ1.bit.CONV03 = 0xC;  //é€šé“3é‡‡æ ·ADCINB4 -> 1.65V (åç½®ç”µå‹)
 
-    AdcRegs.ADCCHSELSEQ2.bit.CONV06 = 0x00; // Í¨µÀ6²ÉÑùADCINA0 -> VA (AÏà½»Á÷µçÑ¹)
-    AdcRegs.ADCCHSELSEQ2.bit.CONV07 = 0x08; // Í¨µÀ7²ÉÑùADCINB0 -> VB (BÏà½»Á÷µçÑ¹)
-    AdcRegs.ADCCHSELSEQ3.bit.CONV08 = 0x09; // Í¨µÀ8²ÉÑùADCINB1 -> VC (CÏà½»Á÷µçÑ¹)
+    AdcRegs.ADCCHSELSEQ2.bit.CONV06 = 0x00; // é€šé“6é‡‡æ ·ADCINA0 -> VA (Aç›¸äº¤æµç”µå‹)
+    AdcRegs.ADCCHSELSEQ2.bit.CONV07 = 0x08; // é€šé“7é‡‡æ ·ADCINB0 -> VB (Bç›¸äº¤æµç”µå‹)
+    AdcRegs.ADCCHSELSEQ3.bit.CONV08 = 0x09; // é€šé“8é‡‡æ ·ADCINB1 -> VC (Cç›¸äº¤æµç”µå‹)
 
-    AdcRegs.ADCCHSELSEQ3.bit.CONV09 = 0x03; // Í¨µÀ09²ÉÑùADCINA9 -> IA (AÏà½»Á÷µçÁ÷)
-    AdcRegs.ADCCHSELSEQ3.bit.CONV10 = 0x0F; // Í¨µÀ10²ÉÑùADCINB10 -> IB (BÏà½»Á÷µçÁ÷)
-    AdcRegs.ADCCHSELSEQ3.bit.CONV11 = 0x0E; // Í¨µÀ11²ÉÑùADCINB11 -> IC (CÏà½»Á÷µçÁ÷)
+    AdcRegs.ADCCHSELSEQ3.bit.CONV09 = 0x03; // é€šé“09é‡‡æ ·ADCINA9 -> IA (Aç›¸äº¤æµç”µæµ)
+    AdcRegs.ADCCHSELSEQ3.bit.CONV10 = 0x0F; // é€šé“10é‡‡æ ·ADCINB10 -> IB (Bç›¸äº¤æµç”µæµ)
+    AdcRegs.ADCCHSELSEQ3.bit.CONV11 = 0x0E; // é€šé“11é‡‡æ ·ADCINB11 -> IC (Cç›¸äº¤æµç”µæµ)
 
-    EDIS; // ½ûÖ¹·ÃÎÊÊÜ±£»¤µÄ¼Ä´æÆ÷²ÉÑùADCINB4 -> 1.65V (Æ«ÖÃµçÑ¹)
+    EDIS; // ç¦æ­¢è®¿é—®å—ä¿æŠ¤çš„å¯„å­˜å™¨é‡‡æ ·ADCINB4 -> 1.65V (åç½®ç”µå‹)
 }
 
 /*
  *--------------------------------------------------------------------------------------
- * º¯Êı:  adc_isr
- * ËµÃ÷:  ADCÖĞ¶Ï·şÎñ³ÌĞò¡£ÕâÊÇÕû¸ö¿ØÖÆÏµÍ³µÄºËĞÄ£¬ÒÔ¹Ì¶¨µÄ¿ª¹ØÆµÂÊ±»µ÷ÓÃ¡£
- * Ëü¶¨ÒåÁËËùÓĞ¼ÆËãºÍ¿ØÖÆÈÎÎñµÄÖ´ĞĞË³Ğò¡£
+ * å‡½æ•°:  adc_isr
+ * è¯´æ˜:  ADCä¸­æ–­æœåŠ¡ç¨‹åºã€‚è¿™æ˜¯æ•´ä¸ªæ§åˆ¶ç³»ç»Ÿçš„æ ¸å¿ƒï¼Œä»¥å›ºå®šçš„å¼€å…³é¢‘ç‡è¢«è°ƒç”¨ã€‚
+ * å®ƒå®šä¹‰äº†æ‰€æœ‰è®¡ç®—å’Œæ§åˆ¶ä»»åŠ¡çš„æ‰§è¡Œé¡ºåºã€‚
  *--------------------------------------------------------------------------------------
  */
 interrupt void adc_isr(void)
 {
-    // ²½Öè 1: ¶ÁÈ¡ËùÓĞÏà¹ØADCÍ¨µÀµÄÔ­Ê¼×ª»»½á¹û
+    // æ–°å¢ï¼šåœ¨æ‰€æœ‰æ§åˆ¶è®¡ç®—ä¹‹å‰ï¼Œå…ˆæ‰§è¡Œè½¯å¯åŠ¨é€»è¾‘
+    soft_start_process();
+
+    // æ­¥éª¤ 1: è¯»å–æ‰€æœ‰ç›¸å…³ADCé€šé“çš„åŸå§‹è½¬æ¢ç»“æœ
     adc_read_channels();
 
-    // ²½Öè 2: ¶ÔĞèÒªÂıËÙÏìÓ¦µÄÖ±Á÷ĞÅºÅ½øĞĞµÍÍ¨ÂË²¨£¬ÒÔ»ñµÃÎÈ¶¨µÄÖµ
-    // ÀıÈç1.65VÆ«ÖÃµçÑ¹£¬ËüÀíÂÛÉÏÓ¦¸ÃÊÇºã¶¨µÄ
+    // æ­¥éª¤ 2: å¯¹éœ€è¦æ…¢é€Ÿå“åº”çš„ç›´æµä¿¡å·è¿›è¡Œä½é€šæ»¤æ³¢ï¼Œä»¥è·å¾—ç¨³å®šçš„å€¼
+    // ä¾‹å¦‚1.65Våç½®ç”µå‹ï¼Œå®ƒç†è®ºä¸Šåº”è¯¥æ˜¯æ’å®šçš„
     apply_dc_filters();
 
-    // ²½Öè 3: ÀûÓÃÂË²¨ºóµÄÆ«ÖÃµçÑ¹£¬¶ÔÔ­Ê¼AC²ÉÑùÖµ½øĞĞÈ¥Æ«ÖÃ´¦Àí£¬²¢Ó¦ÓÃÔöÒæÏµÊı
-    // ½«Æä´Ó0-3VµÄ²ÉÑùµçÑ¹×ª»»ÎªÕæÊµµÄµçÑ¹(V)ºÍµçÁ÷(A)Öµ
+    // æ­¥éª¤ 3: åˆ©ç”¨æ»¤æ³¢åçš„åç½®ç”µå‹ï¼Œå¯¹åŸå§‹ACé‡‡æ ·å€¼è¿›è¡Œå»åç½®å¤„ç†ï¼Œå¹¶åº”ç”¨å¢ç›Šç³»æ•°
+    // å°†å…¶ä»0-3.6Vçš„é‡‡æ ·ç”µå‹è½¬æ¢ä¸ºçœŸå®çš„ç”µå‹(V)å’Œç”µæµ(A)å€¼
     apply_offset_and_gain();
 
-    // ²½Öè 4: ¶ÔÒÑ×ª»»ÎªÎïÀíµ¥Î»µÄ½»Á÷ĞÅºÅÓ¦ÓÃ´øÍ¨ÂË²¨Æ÷
-    // ÕâÊÇ¹Ø¼üÒ»²½£¬Ä¿µÄÊÇ¾«È·ÌáÈ¡50HzµÄ»ù²¨·ÖÁ¿£¬ÂË³ı¸ßÆµÔëÉùºÍÖ±Á÷²ĞÓà
+    // æ­¥éª¤ 4: å¯¹å·²è½¬æ¢ä¸ºç‰©ç†å•ä½çš„äº¤æµä¿¡å·åº”ç”¨å¸¦é€šæ»¤æ³¢å™¨
+    // è¿™æ˜¯å…³é”®ä¸€æ­¥ï¼Œç›®çš„æ˜¯ç²¾ç¡®æå–50Hzçš„åŸºæ³¢åˆ†é‡ï¼Œæ»¤é™¤é«˜é¢‘å™ªå£°å’Œç›´æµæ®‹ä½™
     apply_bandpass_filters();
 
-    // ²½Öè 5: Ö´ĞĞËøÏà»·Ëã·¨£¬Ê¹ÓÃÂË²¨ºóµÄµçÑ¹ĞÅºÅÀ´¾«È·¸ú×ÙµçÍøµÄÏàÎ»ºÍÆµÂÊ
+    // æ­¥éª¤ 5: æ‰§è¡Œé”ç›¸ç¯ç®—æ³•ï¼Œä½¿ç”¨æ»¤æ³¢åçš„ç”µå‹ä¿¡å·æ¥ç²¾ç¡®è·Ÿè¸ªç”µç½‘çš„ç›¸ä½å’Œé¢‘ç‡
     pll_process();
 
-    // ²½Öè 6: Ö´ĞĞClarke±ä»»£¬½«ÈıÏà¾²Ö¹×ø±êÏµ(abc)ÏÂµÄµçÁ÷Á¿×ª»»µ½Á½Ïà¾²Ö¹×ø±êÏµ(¦Á¦Â)
+    // æ­¥éª¤ 6: æ‰§è¡ŒClarkeå˜æ¢ï¼Œå°†ä¸‰ç›¸é™æ­¢åæ ‡ç³»(abc)ä¸‹çš„ç”µæµé‡è½¬æ¢åˆ°ä¸¤ç›¸é™æ­¢åæ ‡ç³»(Î±Î²)
     clarke_transform();
 
-    // ²½Öè 7: Ö´ĞĞPark±ä»»£¬ÀûÓÃËøÏà»·Ìá¹©µÄ½Ç¶È£¬½«Á½Ïà¾²Ö¹(¦Á¦Â)ÏÂµÄµçÑ¹ºÍµçÁ÷Á¿
-    // ×ª»»µ½Á½ÏàÍ¬²½Ğı×ª×ø±êÏµ(dq)
+    // æ­¥éª¤ 7: æ‰§è¡ŒParkå˜æ¢ï¼Œåˆ©ç”¨é”ç›¸ç¯æä¾›çš„è§’åº¦ï¼Œå°†ä¸¤ç›¸é™æ­¢(Î±Î²)ä¸‹çš„ç”µå‹å’Œç”µæµé‡
+    // è½¬æ¢åˆ°ä¸¤ç›¸åŒæ­¥æ—‹è½¬åæ ‡ç³»(dq)
     park_transform();
 
-    // ²½Öè 8: Ö´ĞĞPI¿ØÖÆÆ÷£¬ÔÚdq×ø±êÏµÏÂÊµÏÖµçÑ¹ºÍµçÁ÷µÄË«±Õ»·¿ØÖÆ
+    // æ­¥éª¤ 8: æ‰§è¡ŒPIæ§åˆ¶å™¨ï¼Œåœ¨dqåæ ‡ç³»ä¸‹å®ç°ç”µå‹å’Œç”µæµçš„åŒé—­ç¯æ§åˆ¶
     pi_control_process();
 
-    // ²½Öè 9: Ö´ĞĞÄæPark±ä»»£¬½«PI¿ØÖÆÆ÷Êä³öµÄdqÖ¸ÁîµçÑ¹×ª»»»ØÁ½Ïà¾²Ö¹×ø±êÏµ(¦Á¦Â)
+    // æ­¥éª¤ 9: æ‰§è¡Œé€†Parkå˜æ¢ï¼Œå°†PIæ§åˆ¶å™¨è¾“å‡ºçš„dqæŒ‡ä»¤ç”µå‹è½¬æ¢å›ä¸¤ç›¸é™æ­¢åæ ‡ç³»(Î±Î²)
     inverse_park_transform();
 
-    // ²½Öè 10: Ö´ĞĞSVPWMËã·¨£¬¸ù¾İ¦Á¦ÂÖ¸ÁîµçÑ¹¼ÆËã³öÈıÏàPWMµÄ¿ª¹ØÊ±¼äºÍÕ¼¿Õ±È
+    // æ­¥éª¤ 10: æ‰§è¡ŒSVPWMç®—æ³•ï¼Œæ ¹æ®Î±Î²æŒ‡ä»¤ç”µå‹è®¡ç®—å‡ºä¸‰ç›¸PWMçš„å¼€å…³æ—¶é—´å’Œå ç©ºæ¯”
     svpwm_process();
 
-    // ²½Öè 11: ½«¼ÆËã³öµÄSVPWM±È½ÏÖµĞ´ÈëePWMÄ£¿éµÄÓ²¼ş¼Ä´æÆ÷
+    // æ­¥éª¤ 11: å°†è®¡ç®—å‡ºçš„SVPWMæ¯”è¾ƒå€¼å†™å…¥ePWMæ¨¡å—çš„ç¡¬ä»¶å¯„å­˜å™¨
     update_pwm_compare();
 
-    // ²½Öè 12: (µ÷ÊÔÓÃ) ½«¹Ø¼ü±äÁ¿´æÈë»º³åÇø£¬ÓÃÓÚÍ¨¹ıCCS»òÊ¾²¨Æ÷¹Û²ì²¨ĞÎ
+    // æ­¥éª¤ 12: (è°ƒè¯•ç”¨) å°†å…³é”®å˜é‡å­˜å…¥ç¼“å†²åŒºï¼Œç”¨äºé€šè¿‡CCSæˆ–ç¤ºæ³¢å™¨è§‚å¯Ÿæ³¢å½¢
     data_logging();
 
-    // --- ÖĞ¶Ï½áÊøÇ°µÄÇåÀí¹¤×÷ ---
-    AdcRegs.ADCTRL2.bit.RST_SEQ1 = 1;      // ¸´Î»ADCĞòÁĞ·¢ÉúÆ÷
-    AdcRegs.ADCST.bit.INT_SEQ1_CLR = 1;    // Çå³ıADCĞòÁĞ1µÄÖĞ¶Ï±êÖ¾Î»
-    PieCtrlRegs.PIEACK.all = PIEACK_GROUP1; // ÏòPIE¿ØÖÆÆ÷Ó¦´ğÖĞ¶Ï£¬ÔÊĞíÏìÓ¦Í¬×éµÄÆäËûÖĞ¶Ï
+    // --- ä¸­æ–­ç»“æŸå‰çš„æ¸…ç†å·¥ä½œ ---
+    AdcRegs.ADCTRL2.bit.RST_SEQ1 = 1;      // å¤ä½ADCåºåˆ—å‘ç”Ÿå™¨
+    AdcRegs.ADCST.bit.INT_SEQ1_CLR = 1;    // æ¸…é™¤ADCåºåˆ—1çš„ä¸­æ–­æ ‡å¿—ä½
+    PieCtrlRegs.PIEACK.all = PIEACK_GROUP1; // å‘PIEæ§åˆ¶å™¨åº”ç­”ä¸­æ–­ï¼Œå…è®¸å“åº”åŒç»„çš„å…¶ä»–ä¸­æ–­
 }
 
 /*
  *--------------------------------------------------------------------------------------
- * º¯Êı:  adc_read_channels
- * ËµÃ÷:  ´ÓADC½á¹û¼Ä´æÆ÷ÖĞ¶ÁÈ¡Êı¾İ£¬²¢×ª»»Îª0-3.0V·¶Î§ÄÚµÄ¸¡µãµçÑ¹Öµ¡£
+ * å‡½æ•°:  adc_read_channels
+ * è¯´æ˜:  ä»ADCç»“æœå¯„å­˜å™¨ä¸­è¯»å–æ•°æ®ï¼Œå¹¶è½¬æ¢ä¸º0-3.0VèŒƒå›´å†…çš„æµ®ç‚¹ç”µå‹å€¼ã€‚
  *--------------------------------------------------------------------------------------
  */
 static void adc_read_channels(void)
 {
     ControlSystem_t *sys = &g_control_system;
 
-    // ÓÒÒÆ4Î»ÊÇÎªÁË½«12Î»ADC½á¹û¶ÔÆë¡£ADCRESULT¼Ä´æÆ÷ÊÇ16Î»µÄ£¬½á¹û×ó¶ÔÆë´æ·Å¡£
+    // å³ç§»4ä½æ˜¯ä¸ºäº†å°†12ä½ADCç»“æœå¯¹é½ã€‚ADCRESULTå¯„å­˜å™¨æ˜¯16ä½çš„ï¼Œç»“æœå·¦å¯¹é½å­˜æ”¾ã€‚
 
-    // ¸ù¾İ adc_config ÖĞµÄ CONV00 ÅäÖÃ£¬¶ÁÈ¡Ö±Á÷Êä³öµçÑ¹
+    // æ ¹æ® adc_config ä¸­çš„ CONV00 é…ç½®ï¼Œè¯»å–ç›´æµè¾“å‡ºç”µå‹
     sys->adc_raw.output_voltage      = (AdcRegs.ADCRESULT0 >> 4) * ADC_TO_VOLTAGE;
 
-    // ¸ù¾İ adc_config ÖĞµÄ CONV01 ÅäÖÃ£¬¶ÁÈ¡Ö±Á÷Êä³öµçÁ÷
-    sys->adc_raw.output_current      = (AdcRegs.ADCRESULT1 >> 4) * ADC_TO_VOLTAGE; // ¼ÙÉè½á¹¹ÌåÖĞÓĞ´Ë³ÉÔ±
+    // æ ¹æ® adc_config ä¸­çš„ CONV01 é…ç½®ï¼Œè¯»å–ç›´æµè¾“å‡ºç”µæµ
+    sys->adc_raw.output_current      = (AdcRegs.ADCRESULT1 >> 4) * ADC_TO_VOLTAGE; // å‡è®¾ç»“æ„ä½“ä¸­æœ‰æ­¤æˆå‘˜
 
-    // ¸ù¾İ adc_config ÖĞµÄ CONV02 ºÍ CONV03 ÅäÖÃ£¬¶ÁÈ¡Æ«ÖÃµçÑ¹
-    // Äú¿ÉÒÔ¸ù¾İĞèÒªÑ¡Ôñ´æ´¢Ò»¸ö»òÁ½¸öÖµ
-    sys->adc_raw.ref_voltage_current_165 = (AdcRegs.ADCRESULT2 >> 4) * ADC_TO_VOLTAGE; // ¼ÙÉèÎªµçÁ÷»·µÄÆ«ÖÃ
-    sys->adc_raw.ref_voltage_voltage_165 = (AdcRegs.ADCRESULT3 >> 4) * ADC_TO_VOLTAGE; // ¼ÙÉèÎªµçÑ¹»·µÄÆ«ÖÃ
+    // æ ¹æ® adc_config ä¸­çš„ CONV02 å’Œ CONV03 é…ç½®ï¼Œè¯»å–åç½®ç”µå‹
+    // æ‚¨å¯ä»¥æ ¹æ®éœ€è¦é€‰æ‹©å­˜å‚¨ä¸€ä¸ªæˆ–ä¸¤ä¸ªå€¼
+    sys->adc_raw.ref_voltage_current_165 = (AdcRegs.ADCRESULT2 >> 4) * ADC_TO_VOLTAGE; // å‡è®¾ä¸ºç”µæµç¯çš„åç½®
+    sys->adc_raw.ref_voltage_voltage_165 = (AdcRegs.ADCRESULT3 >> 4) * ADC_TO_VOLTAGE; // å‡è®¾ä¸ºç”µå‹ç¯çš„åç½®
 
-    // ¸ù¾İ adc_config ÖĞµÄ CONV06 ÅäÖÃ£¬¶ÁÈ¡AÏà½»Á÷µçÑ¹
+    // æ ¹æ® adc_config ä¸­çš„ CONV06 é…ç½®ï¼Œè¯»å–Aç›¸äº¤æµç”µå‹
     sys->adc_raw.ac_voltage_a        = (AdcRegs.ADCRESULT6 >> 4) * ADC_TO_VOLTAGE;
 
-    // ¸ù¾İ adc_config ÖĞµÄ CONV07 ÅäÖÃ£¬¶ÁÈ¡BÏà½»Á÷µçÑ¹
+    // æ ¹æ® adc_config ä¸­çš„ CONV07 é…ç½®ï¼Œè¯»å–Bç›¸äº¤æµç”µå‹
     sys->adc_raw.ac_voltage_b        = (AdcRegs.ADCRESULT7 >> 4) * ADC_TO_VOLTAGE;
 
-    // ¸ù¾İ adc_config ÖĞµÄ CONV08 ÅäÖÃ£¬¶ÁÈ¡CÏà½»Á÷µçÑ¹
+    // æ ¹æ® adc_config ä¸­çš„ CONV08 é…ç½®ï¼Œè¯»å–Cç›¸äº¤æµç”µå‹
     sys->adc_raw.ac_voltage_c        = (AdcRegs.ADCRESULT8 >> 4) * ADC_TO_VOLTAGE;
 
-    // ¸ù¾İ adc_config ÖĞµÄ CONV09 ÅäÖÃ£¬¶ÁÈ¡AÏà½»Á÷µçÁ÷
+    // æ ¹æ® adc_config ä¸­çš„ CONV09 é…ç½®ï¼Œè¯»å–Aç›¸äº¤æµç”µæµ
     sys->adc_raw.ac_current_a        = (AdcRegs.ADCRESULT9 >> 4) * ADC_TO_VOLTAGE;
 
-    // ¸ù¾İ adc_config ÖĞµÄ CONV10 ÅäÖÃ£¬¶ÁÈ¡BÏà½»Á÷µçÁ÷
+    // æ ¹æ® adc_config ä¸­çš„ CONV10 é…ç½®ï¼Œè¯»å–Bç›¸äº¤æµç”µæµ
     sys->adc_raw.ac_current_b        = (AdcRegs.ADCRESULT10 >> 4) * ADC_TO_VOLTAGE;
 
-    // ¸ù¾İ adc_config ÖĞµÄ CONV11 ÅäÖÃ£¬¶ÁÈ¡CÏà½»Á÷µçÁ÷
+    // æ ¹æ® adc_config ä¸­çš„ CONV11 é…ç½®ï¼Œè¯»å–Cç›¸äº¤æµç”µæµ
     sys->adc_raw.ac_current_c        = (AdcRegs.ADCRESULT11 >> 4) * ADC_TO_VOLTAGE;
 }
 
 /*
  *--------------------------------------------------------------------------------------
- * º¯Êı:  apply_dc_filters
- * ËµÃ÷:  Ó¦ÓÃÒ»½×µÍÍ¨ÂË²¨Æ÷À´Æ½»¬Ö±Á÷ĞÅºÅ¡£
+ * å‡½æ•°:  apply_dc_filters
+ * è¯´æ˜:  åº”ç”¨ä¸€é˜¶ä½é€šæ»¤æ³¢å™¨æ¥å¹³æ»‘ç›´æµä¿¡å·ã€‚
  *--------------------------------------------------------------------------------------
  */
 static void apply_dc_filters(void)
 {
     ControlSystem_t *sys = &g_control_system;
-    const float32 filter_coeff = 0.001f; // Í³Ò»µÄÂıËÙÂË²¨ÏµÊı£¬Óë AdcVIHan() ±£³ÖÒ»ÖÂ
+    const float32 filter_coeff = 0.001f; // ç»Ÿä¸€çš„æ…¢é€Ÿæ»¤æ³¢ç³»æ•°
 
-    // ¶ÔÖ±Á÷Ä¸ÏßµçÑ¹ (Vo) ½øĞĞµÍÍ¨ÂË²¨
+    // å¯¹ç›´æµæ¯çº¿ç”µå‹ (Vo) è¿›è¡Œä½é€šæ»¤æ³¢
     sys->filter_vo.current = sys->adc_raw.output_voltage;
-    // Ê¹ÓÃ AdcVIHan ÖĞµÄÂË²¨ÏµÊı 0.001f
+    // ä½¿ç”¨æ»¤æ³¢ç³»æ•° 0.001f
     sys->filter_vo.filtered = filter_2_x(sys->filter_vo.current, sys->filter_vo.previous, filter_coeff);
     sys->filter_vo.previous = sys->filter_vo.filtered;
-    sys->filter_VDC = sys->filter_vo.filtered * OUTPUT_VOLTAGE_REF/2;
+    sys->filter_VDC = (sys->filter_vo.filtered - 0.011) * OUTPUT_VOLTAGE_REF/2;
 
-    // ĞÂÔö£º¶ÔÖ±Á÷Êä³öµçÁ÷ (Io) ½øĞĞµÍÍ¨ÂË²¨
+    // å¯¹ç›´æµè¾“å‡ºç”µæµ (Io) è¿›è¡Œä½é€šæ»¤æ³¢
     sys->filter_io.current = sys->adc_raw.output_current;
     sys->filter_io.filtered = filter_2_x(sys->filter_io.current, sys->filter_io.previous, filter_coeff);
     sys->filter_io.previous = sys->filter_io.filtered;
 
-    // ¶ÔµçÁ÷»·µÄ1.65VÆ«ÖÃµçÑ¹½øĞĞµÍÍ¨ÂË²¨
+    // å¯¹ç”µæµç¯çš„1.65Våç½®ç”µå‹è¿›è¡Œä½é€šæ»¤æ³¢
     sys->filter_v165_current.current = sys->adc_raw.ref_voltage_current_165;
     sys->filter_v165_current.filtered = filter_2_x(sys->filter_v165_current.current, sys->filter_v165_current.previous, filter_coeff);
     sys->filter_v165_current.previous = sys->filter_v165_current.filtered;
 
-    // ¶ÔµçÑ¹»·µÄ1.65VÆ«ÖÃµçÑ¹½øĞĞµÍÍ¨ÂË²¨
+    // å¯¹ç”µå‹ç¯çš„1.65Våç½®ç”µå‹è¿›è¡Œä½é€šæ»¤æ³¢
     sys->filter_v165_voltage.current = sys->adc_raw.ref_voltage_voltage_165;
     sys->filter_v165_voltage.filtered = filter_2_x(sys->filter_v165_voltage.current, sys->filter_v165_voltage.previous, filter_coeff);
     sys->filter_v165_voltage.previous = sys->filter_v165_voltage.filtered;
@@ -225,8 +228,8 @@ static void apply_dc_filters(void)
 
 /*
  *--------------------------------------------------------------------------------------
- * º¯Êı:  apply_offset_and_gain
- * ËµÃ÷:  ½øĞĞÆ«ÒÆĞ£ÕıºÍÔöÒæ×ª»»£¬µÃµ½ÕæÊµµÄÎïÀíÖµ¡£
+ * å‡½æ•°:  apply_offset_and_gain
+ * è¯´æ˜:  è¿›è¡Œåç§»æ ¡æ­£å’Œå¢ç›Šè½¬æ¢ï¼Œå¾—åˆ°çœŸå®çš„ç‰©ç†å€¼ã€‚
  *--------------------------------------------------------------------------------------
  */
 
@@ -235,23 +238,23 @@ static void apply_offset_and_gain(void)
 {
     ControlSystem_t *sys = &g_control_system;
     float v165_filtered = sys->filter_v165_voltage.filtered;
-    float A165_filtered = sys->filter_v165_current.filtered;
+//    float A165_filtered = sys->filter_v165_current.filtered;
 
-    // 1. ´ÓACĞÅºÅµÄ²ÉÑùÖµÖĞ¼õÈ¥ÂË²¨ºóµÃµ½µÄÎÈ¶¨Ö±Á÷Æ«ÖÃ
+    // 1. ä»ACä¿¡å·çš„é‡‡æ ·å€¼ä¸­å‡å»æ»¤æ³¢åå¾—åˆ°çš„ç¨³å®šç›´æµåç½®
     float va_offset = sys->adc_raw.ac_voltage_a - v165_filtered;
     float vb_offset = sys->adc_raw.ac_voltage_b - v165_filtered;
     float vc_offset = sys->adc_raw.ac_voltage_c - v165_filtered;
 
-    float ia_offset = sys->adc_raw.ac_current_a - A165_filtered;
-    float ib_offset = sys->adc_raw.ac_current_b - A165_filtered;
-    float ic_offset = sys->adc_raw.ac_current_c - A165_filtered;
+    float ia_offset = sys->adc_raw.ac_current_a - v165_filtered;
+    float ib_offset = sys->adc_raw.ac_current_b - v165_filtered;
+    float ic_offset = sys->adc_raw.ac_current_c - v165_filtered;
 
-    // 2. Ó¦ÓÃÓ²¼şµçÂ·µÄÔöÒæÏµÊı£¬½«Ğ£ÕıºóµÄµçÑ¹ĞÅºÅ×ª»»ÎªÕæÊµµÄÎïÀíµ¥Î»
+    // 2. åº”ç”¨ç¡¬ä»¶ç”µè·¯çš„å¢ç›Šç³»æ•°ï¼Œå°†æ ¡æ­£åçš„ç”µå‹ä¿¡å·è½¬æ¢ä¸ºçœŸå®çš„ç‰©ç†å•ä½
     sys->voltage.phase_a = va_offset * 487.8f;
     sys->voltage.phase_b = vb_offset * 487.8f;
     sys->voltage.phase_c = vc_offset * 487.8f;
 
-    // ¸ù¾İ´úÂëÒ»µÄÂß¼­£¬µçÁ÷ĞÅºÅĞèÒªÈ¡·´¡£ÕâÍ¨³£ÓëµçÁ÷´«¸ĞÆ÷µÄ·½Ïò»ò½Ó·¨ÓĞ¹Ø¡£
+    // æ ¹æ®ä»£ç ä¸€çš„é€»è¾‘ï¼Œç”µæµä¿¡å·éœ€è¦å–åã€‚è¿™é€šå¸¸ä¸ç”µæµä¼ æ„Ÿå™¨çš„æ–¹å‘æˆ–æ¥æ³•æœ‰å…³ã€‚
     sys->current.phase_a = -ia_offset * 40.0f;
     sys->current.phase_b = -ib_offset * 40.0f;
     sys->current.phase_c = -ic_offset * 40.0f;
@@ -259,17 +262,14 @@ static void apply_offset_and_gain(void)
 
 /*
  *--------------------------------------------------------------------------------------
- * º¯Êı:  apply_bandpass_filters
- * ËµÃ÷:  ¶ÔÈıÏà½»Á÷µçÑ¹ºÍµçÁ÷Ó¦ÓÃ´øÍ¨ÂË²¨Æ÷¡£
+ * å‡½æ•°:  apply_bandpass_filters
+ * è¯´æ˜:  å¯¹ä¸‰ç›¸äº¤æµç”µå‹å’Œç”µæµåº”ç”¨å¸¦é€šæ»¤æ³¢å™¨ã€‚
  *--------------------------------------------------------------------------------------
  */
-int test= 0;
-#define TEST 200
-float va[TEST] = {0};
 static void apply_bandpass_filters(void)
 {
     ControlSystem_t *sys = &g_control_system;
-    // ½«¾­¹ıÔöÒæ×ª»»ºóµÄÎïÀíÖµÊäÈë´øÍ¨ÂË²¨Æ÷
+    // å°†ç»è¿‡å¢ç›Šè½¬æ¢åçš„ç‰©ç†å€¼è¾“å…¥å¸¦é€šæ»¤æ³¢å™¨
     sys->voltage_filtered.phase_a = filter_bandpass(sys->voltage.phase_a, &sys->bp_va, &sys->bp_coeffs);
     sys->voltage_filtered.phase_b = filter_bandpass(sys->voltage.phase_b, &sys->bp_vb, &sys->bp_coeffs);
     sys->voltage_filtered.phase_c = filter_bandpass(sys->voltage.phase_c, &sys->bp_vc, &sys->bp_coeffs);
@@ -277,47 +277,46 @@ static void apply_bandpass_filters(void)
     sys->current_filtered.phase_a = filter_bandpass(sys->current.phase_a, &sys->bp_ia, &sys->bp_coeffs);
     sys->current_filtered.phase_b = filter_bandpass(sys->current.phase_b, &sys->bp_ib, &sys->bp_coeffs);
     sys->current_filtered.phase_c = filter_bandpass(sys->current.phase_c, &sys->bp_ic, &sys->bp_coeffs);
-
-    va[test] = sys->voltage_filtered.phase_a;
-    test++;
-    test%=TEST;
 }
 
 
 /**
- * @brief Ë«Í¬²½×ø±êÏµËøÏà»·(DDSOGI-PLL)ºËĞÄ´¦Àíº¯Êı
+ * @brief åŒåŒæ­¥åæ ‡ç³»é”ç›¸ç¯(DDSOGI-PLL)æ ¸å¿ƒå¤„ç†å‡½æ•°
  * @details
- * ±¾º¯ÊıÑÏ¸ñ¶ÔÕÕ²¢¸´ÏÖÁË LockPhase() º¯ÊıµÄ¼ÆËãÂß¼­£¬ÒÔÊµÏÖ¹¦ÄÜÉÏµÄ1:1Ó³Éä¡£
- * ËüÊ¹ÓÃÔÚ adc_user.h ÖĞ¶¨ÒåµÄÈ«¾Ö½á¹¹Ìå g_control_system ½øĞĞËùÓĞ¼ÆËãºÍ×´Ì¬¸üĞÂ¡£
- * Á÷³Ì: Clarke±ä»» -> Õı¸ºĞò·ÖÀë -> ½»²æ½âñî -> µÍÍ¨ÂË²¨ -> PIµ÷½Ú -> ÆµÂÊ/ÏàÎ»¸üĞÂ
+ * å®ƒä½¿ç”¨åœ¨ adc_user.h ä¸­å®šä¹‰çš„å…¨å±€ç»“æ„ä½“ g_control_system è¿›è¡Œæ‰€æœ‰è®¡ç®—å’ŒçŠ¶æ€æ›´æ–°ã€‚
+ * æµç¨‹: Clarkeå˜æ¢ -> æ­£è´Ÿåºåˆ†ç¦» -> äº¤å‰è§£è€¦ -> ä½é€šæ»¤æ³¢ -> PIè°ƒèŠ‚ -> é¢‘ç‡/ç›¸ä½æ›´æ–°
  */
 static void pll_process(void)
 {
-    // ´ÓÈ«¾Ö½á¹¹ÌåÖĞ»ñÈ¡¹¤×÷ËùĞèµÄ×Ó½á¹¹ÌåÖ¸Õë£¬·½±ã¶ÁĞ´
+    // ä»å…¨å±€ç»“æ„ä½“ä¸­è·å–å·¥ä½œæ‰€éœ€çš„å­ç»“æ„ä½“æŒ‡é’ˆï¼Œæ–¹ä¾¿è¯»å†™
     ControlSystem_t *sys = &g_control_system;
     PLL_t *pll = &sys->pll;
 
+    // !!! å…³é”®æ­¥éª¤: åœ¨æ‰€æœ‰è®¡ç®—å¼€å§‹å‰ï¼Œä¿å­˜ä¸Šä¸€æ‹çš„è§’åº¦å¿«ç…§,è¯¥piå‚æ•°å»ºç«‹åœ¨ä¸€æ‹å»¶è¿Ÿä¸Š!!!
+    pll->theta_prev  = pll->theta;
+    pll->cos_wt_prev = pll->cos_wt;
+    pll->sin_wt_prev = pll->sin_wt;
     /* ================================================================================= */
-    /* ²½Öè 1: Clarke ±ä»» (abc -> ¦Á¦Â)                                                 */
-    /* ×¢Òâ£ºÔ­Ê¼´úÂë³ıÒÔÁË Uo (OUTPUT_VOLTAGE_REF) ½øĞĞ¹éÒ»»¯¡£                       */
+    /* æ­¥éª¤ 1: Clarke å˜æ¢ (abc -> Î±Î²)                                                 */
+    /* æ³¨æ„ï¼šæ­¤å¤„è¿›è¡Œäº†å½’ä¸€åŒ–å¤„ç†ï¼Œä¸å¯ä½œä¸ºç”µæµç¯è¾“å‡ºçš„å‚è€ƒç”µå‹                                */
     /* ================================================================================= */
-    // ´ÓÂË²¨ºóµÄÈıÏàµçÑ¹½øĞĞ±ä»»
+    // ä»æ»¤æ³¢åçš„ä¸‰ç›¸ç”µå‹è¿›è¡Œå˜æ¢
     float va = sys->voltage_filtered.phase_a;
     float vb = sys->voltage_filtered.phase_b;
     float vc = sys->voltage_filtered.phase_c;
 
-    // ¼ÆËã¹éÒ»»¯ºóµÄ Alpha-Beta ×ø±ê
+    // è®¡ç®—å½’ä¸€åŒ–åçš„ Alpha-Beta åæ ‡
     sys->voltage_ab.alpha = TWO_DIV_3 * (va / OUTPUT_VOLTAGE_REF - 0.5f * vb / OUTPUT_VOLTAGE_REF - 0.5f * vc / OUTPUT_VOLTAGE_REF);
     sys->voltage_ab.beta  = SQRT_3_DIV_3 * (vb / OUTPUT_VOLTAGE_REF - vc / OUTPUT_VOLTAGE_REF);
 
 
     /* ================================================================================= */
-    /* ²½Öè 2: ¼ÆËãÔ­Ê¼µÄÕıĞòºÍ¸ºĞòd-q·ÖÁ¿ (VPosD, VPosQ, VNegD, VNegQ)              */
+    /* æ­¥éª¤ 2: è®¡ç®—åŸå§‹çš„æ­£åºå’Œè´Ÿåºd-qåˆ†é‡               */
     /* ================================================================================= */
     float v_alpha = sys->voltage_ab.alpha;
     float v_beta  = sys->voltage_ab.beta;
-    float cos_wt  = pll->cos_wt;
-    float sin_wt  = pll->sin_wt;
+    float cos_wt  = pll->cos_wt_prev;
+    float sin_wt  = pll->sin_wt_prev;
 
     float vpd_raw =  v_alpha * cos_wt + v_beta * sin_wt;
     float vpq_raw = -v_alpha * sin_wt + v_beta * cos_wt;
@@ -326,115 +325,157 @@ static void pll_process(void)
 
 
     /* ================================================================================= */
-    /* ²½Öè 3: Õı¸ºĞò½»²æ½âñîÓëµÍÍ¨ÂË²¨ (Decoupling)                                  */
+    /* æ­¥éª¤ 3: æ­£è´Ÿåºäº¤å‰è§£è€¦ä¸ä½é€šæ»¤æ³¢ (Decoupling)                                  */
     /* ================================================================================= */
-    float sin_2wt = sinf(2.0f * pll->theta);
-    float cos_2wt = cosf(2.0f * pll->theta);
+    float sin_2wt = sinf(2.0f * pll->theta_prev);
+    float cos_2wt = cosf(2.0f * pll->theta_prev);
 
-    // ½âñîÕıĞòdÖáµçÑ¹ (Vpd)
+    // è§£è€¦æ­£åºdè½´ç”µå‹ (Vpd)
     float vpd_decoupled = vpd_raw - (cos_2wt * sys->filter_vnd.filtered + sin_2wt * sys->filter_vnq.filtered);
     sys->filter_vpd.filtered = filter_1_x(vpd_decoupled, sys->filter_vpd.previous, 0.062832f);
     sys->filter_vpd.previous = sys->filter_vpd.filtered;
 
-    // ½âñîÕıĞòqÖáµçÑ¹ (Vpq)
-    // ×¢Òâ£ºÔ­Ê¼´úÂëÖĞ´Ë´¦Îª Pll.VPosQ - (sin*Vnd - cos*Vnq)£¬ÎÒÃÇ×ñÑ­¸ÃÂß¼­
+    // è§£è€¦æ­£åºqè½´ç”µå‹ (Vpq)
     float vpq_decoupled = vpq_raw - (-sin_2wt * sys->filter_vnd.filtered + cos_2wt * sys->filter_vnq.filtered);
     sys->filter_vpq.filtered = filter_1_x(vpq_decoupled, sys->filter_vpq.previous, 0.062832f);
     sys->filter_vpq.previous = sys->filter_vpq.filtered;
 
-    // ½âñî¸ºĞòdÖáµçÑ¹ (Vnd), ¶ÔÓ¦ LockPhase ÖĞµÄ Pll.DVND ºÍ Pll.FDVND
+    // è§£è€¦è´Ÿåºdè½´ç”µå‹ (Vnd)
     float vnd_decoupled = vnd_raw - (cos_2wt * sys->filter_vpd.filtered - sin_2wt * sys->filter_vpq.filtered);
     sys->filter_vnd.filtered = filter_1_x(vnd_decoupled, sys->filter_vnd.previous, 0.062832f);
     sys->filter_vnd.previous = sys->filter_vnd.filtered;
 
-    // ½âñî¸ºĞòqÖáµçÑ¹ (Vnq), ¶ÔÓ¦ LockPhase ÖĞµÄ Pll.DVNQ ºÍ Pll.FDVNQ
+    // è§£è€¦è´Ÿåºqè½´ç”µå‹ (Vnq)
     float vnq_decoupled = vnq_raw - (sin_2wt * sys->filter_vpd.filtered + cos_2wt * sys->filter_vpq.filtered);
     sys->filter_vnq.filtered = filter_1_x(vnq_decoupled, sys->filter_vnq.previous, 0.062832f);
     sys->filter_vnq.previous = sys->filter_vnq.filtered;
 
 
-    /* ================================================================================= */
-    /* ²½Öè 4: PI ¿ØÖÆÆ÷ (ÍêÈ«¸´ÏÖ LockPhase µÄÂß¼­)                                      */
-    /* ×¢Òâ: Îª¾«È·¸´ÏÖ, PLL_t ½á¹¹ÌåÖĞĞèÒªÔö¼Ó×´Ì¬±äÁ¿À´¶ÔÓ¦ Pll.DVPQ_preD2           */
-    /* ÎÒÃÇ½« pll->pi_integrator_state ÓÃ×÷ Pll.DVPQ_preD2                           */
-    /* pll->error_prev ÓÃ×÷ Pll.DVPQ_preD                                            */
-    /* pll->pi_output ÓÃ×÷ Pll.DVPQ_preD1                                            */
-    /* ================================================================================= */
-    // 4.1 ¶¨ÒåPIÏµÊı (Óë LockPhase ÖĞµÄÓ²±àÂëÊıÖµÍêÈ«Ò»ÖÂ)
-    //PI_COEFF_AÊÇKP+KI£¬PI_COEFF_BÊÇKP
+    /*
+    * =================================================================================
+    * æ­¥éª¤ 4: PI (æ¯”ä¾‹-ç§¯åˆ†) æ§åˆ¶å™¨
+    * ---------------------------------------------------------------------------------
+    * æœ¬éƒ¨åˆ†æ˜¯é”ç›¸ç¯é¢‘ç‡å›è·¯çš„æ ¸å¿ƒã€‚å®ƒé€šè¿‡ä¸€ä¸ªPIæ§åˆ¶å™¨ï¼Œå¤„ç†ä»£è¡¨ç›¸ä½è¯¯å·®çš„
+    * qè½´ç”µå‹åˆ†é‡(vq_error)ï¼Œç›®æ ‡æ˜¯å°†å…¶é©±åŠ¨è‡³é›¶ã€‚æ§åˆ¶å™¨çš„è¾“å‡ºæ˜¯é¢‘ç‡è¡¥å¿é‡(Î”Ï‰)ï¼Œ
+    * ç”¨äºä¿®æ­£å¯¹ç”µç½‘é¢‘ç‡çš„ä¼°è®¡ã€‚
+    * =================================================================================
+    */
+
+    // 4.1 å®šä¹‰PIæ§åˆ¶å™¨ç³»æ•°
+    // ä¸ºäº†æé«˜è®¡ç®—æ•ˆç‡ï¼Œè¿™é‡Œä½¿ç”¨äº†PIæ§åˆ¶å™¨çš„å·®åˆ†æ–¹ç¨‹é¢„è®¡ç®—ç³»æ•°å½¢å¼:
+    // u(k) = u(k-1) + Kp*(e(k) - e(k-1)) + Ki*T*e(k)
+    // æ•´ç†åå¯å¾—: u(k) = u(k-1) + (Kp + Ki*T)*e(k) - Kp*e(k-1)
+    // å…¶ä¸­: u(k)æ˜¯å½“å‰è¾“å‡º, u(k-1)æ˜¯ä¸Šæ¬¡è¾“å‡º, e(k)æ˜¯å½“å‰è¯¯å·®, e(k-1)æ˜¯ä¸Šæ¬¡è¯¯å·®ã€‚
+    // PI_COEFF_A å¯¹åº” (Kp + Ki*T)ï¼Œæ˜¯æ¯”ä¾‹å’Œç§¯åˆ†é¡¹ç»„åˆç³»æ•°
+    // PI_COEFF_B å¯¹åº” Kpï¼Œæ˜¯çº¯æ¯”ä¾‹é¡¹ç³»æ•°
     const float PI_COEFF_A = 166.9743385f;
     const float PI_COEFF_B = 166.2661165f;
 
-    // 4.2 »ñÈ¡Îó²îĞÅºÅ (½âñîºóµÄVpq) ²¢½øĞĞÊäÈëÏŞ·ù
-    float vq_error = sys->filter_vpq.filtered; // ¶ÔÓ¦ Pll.FDVPQ
+    // 4.2 è·å–è¯¯å·®ä¿¡å·å¹¶è¿›è¡Œè¾“å…¥é™å¹…
+    // ä»æ»¤æ³¢å™¨è·å–è§£è€¦åçš„qè½´ç”µå‹ï¼Œå®ƒåœ¨é”ç›¸æˆåŠŸæ—¶åº”æ¥è¿‘äº0ï¼Œä½œä¸ºPIæ§åˆ¶å™¨çš„è¯¯å·®è¾“å…¥ã€‚
+    float vq_error = sys->filter_vpq.filtered;
+    // å¯¹è¾“å…¥è¯¯å·®è¿›è¡Œé™å¹…ï¼Œå¯ä»¥é˜²æ­¢åœ¨ç”µç½‘ç”µå‹å‘ç”Ÿå‰§çƒˆæ‰°åŠ¨æ—¶ï¼Œè¿‡å¤§çš„è¯¯å·®å†²å‡»å¯¼è‡´PIæ§åˆ¶å™¨è¾“å‡ºå‰§å˜ã€‚
     vq_error = saturate(vq_error, -0.1f, 0.1f);
 
-    // 4.3 Ö´ĞĞPI¼ÆËã£¬ÍêÈ«µÈĞ§ÓÚ Pll.DVPQ_preD1 = Pll.DVPQ_preD2 + A*err(k) - B*err(k-1)
+    // 4.3 æ‰§è¡ŒPIæ§åˆ¶å™¨è®¡ç®—
+    // æ­¤è¡Œä»£ç å®ç°äº†ä¸Šè¿°çš„PIå·®åˆ†æ–¹ç¨‹ã€‚
+    // pll->pi_integrator_state å­˜å‚¨äº†ä¸Šä¸€æ¬¡çš„è¾“å‡º u(k-1)ã€‚
+    // pll->error_prev å­˜å‚¨äº†ä¸Šä¸€æ¬¡çš„è¯¯å·® e(k-1)ã€‚
     pll->pi_output = pll->pi_integrator_state + PI_COEFF_A * vq_error - PI_COEFF_B * pll->error_prev;
 
-    // 4.4 ¸üĞÂÓÃÓÚÏÂÒ»´Î¼ÆËãµÄÎó²îÖµ
-    pll->error_prev = vq_error; // ¶ÔÓ¦ Pll.DVPQ_preD = Pll.FDVPQ;
+    // 4.4 æ›´æ–°å†å²è¯¯å·®å€¼
+    // ä¿å­˜æœ¬æ¬¡çš„è¯¯å·®å€¼ï¼Œä»¥ä¾¿åœ¨ä¸‹ä¸€æ¬¡è¿­ä»£ä¸­ä½œä¸º e(k-1) ä½¿ç”¨ã€‚
+    pll->error_prev = vq_error;
 
-    // 4.5 PIÊä³öÏŞ·ù (¿¹±¥ºÍ), ¶ÔÓ¦ +/- 5Hz
-    const float FREQ_DEV_LIMIT = 5.0f * 2.0f * PI;
+    // 4.5 å¯¹PIè¾“å‡ºè¿›è¡Œé™å¹… (æŠ—ç§¯åˆ†é¥±å’Œ)
+    // é™åˆ¶PIæ§åˆ¶å™¨çš„æœ€å¤§è¾“å‡ºï¼Œå³é™åˆ¶PLLå…è®¸çš„æœ€å¤§é¢‘ç‡åç§»é‡ (æ­¤å¤„ä¸º +/- 5Hz)ã€‚
+    // è¿™å¯ä»¥é˜²æ­¢PLLåœ¨å¯åŠ¨æˆ–åŒæ­¥è¿‡ç¨‹ä¸­è¯·æ±‚ä¸€ä¸ªä¸åˆ‡å®é™…çš„é¢‘ç‡ã€‚
+    const float FREQ_DEV_LIMIT = 5.0f * 2.0f * PI; // 5Hz å¯¹åº”çš„è§’é¢‘ç‡åç§»é‡
     pll->pi_output = saturate(pll->pi_output, -FREQ_DEV_LIMIT, FREQ_DEV_LIMIT);
 
-    // 4.6 ¸üĞÂ»ı·ÖÆ÷×´Ì¬Öµ£¬ÓÃÓÚÏÂ´ÎÀÛ¼Ó
-    pll->pi_integrator_state = pll->pi_output; // ¶ÔÓ¦ Pll.DVPQ_preD2 = Pll.DVPQ_preD1;
+    // 4.6 æ›´æ–°ç§¯åˆ†å™¨çŠ¶æ€ (æŠ—ç§¯åˆ†é¥±å’Œçš„å…³é”®æ­¥éª¤)
+    // è¿™æ˜¯â€œç§¯åˆ†é’³ä½â€æˆ–â€œè¿”å›è®¡ç®—â€æŠ—é¥±å’Œç­–ç•¥ã€‚é€šè¿‡å°†é¥±å’Œåçš„è¾“å‡ºå€¼å›ä¼ ç»™ç§¯åˆ†çŠ¶æ€å˜é‡ï¼Œ
+    // å¯ä»¥é˜²æ­¢åœ¨è¾“å‡ºè¢«é™å¹…æ—¶ç§¯åˆ†é¡¹ç»§ç»­ç´¯åŠ ï¼Œä»è€Œé¿å…ç§¯åˆ†é¥±å’Œã€‚è¿™ä½¿å¾—PLLåœ¨è„±ç¦»é¥±å’ŒçŠ¶æ€æ—¶èƒ½æ›´å¿«åœ°æ¢å¤ã€‚
+    pll->pi_integrator_state = pll->pi_output;
 
 
-    /* ================================================================================= */
-    /* ²½Öè 5: ¸üĞÂ½ÇÆµÂÊºÍÏàÎ» (ÍêÈ«¸´ÏÖ LockPhase µÄÂß¼­)                               */
-    /* ================================================================================= */
-    float freq_deviation = pll->pi_output;         // PIÊä³ö¾ÍÊÇÆµÂÊµ÷ÕûÁ¿ ¦¤¦Ø, ¶ÔÓ¦ Pll.w_cmp
-    pll->omega = (2.0f * PI * 50.0f) + freq_deviation; // µÃµ½×îÖÕ½ÇÆµÂÊ, ¶ÔÓ¦ Pll.w
+    /*
+    * =================================================================================
+    * æ­¥éª¤ 5: æ›´æ–°è§’é¢‘ç‡å’Œç›¸ä½
+    * ---------------------------------------------------------------------------------
+    * æœ¬éƒ¨åˆ†åˆ©ç”¨PIæ§åˆ¶å™¨çš„è¾“å‡ºç»“æœï¼Œæ›´æ–°é”ç›¸ç¯çš„å†…éƒ¨é¢‘ç‡å’Œç›¸ä½è§’ï¼Œ
+    * ä»¥ä¾¿åœ¨ä¸‹ä¸€å‘¨æœŸç”Ÿæˆæ­£ç¡®çš„æ­£ä½™å¼¦å‚è€ƒä¿¡å·ã€‚
+    * =================================================================================
+    */
 
-    pll->theta += pll->omega * SAMPLING_PERIOD;    // »ı·ÖµÃµ½ĞÂµÄÏàÎ»½Ç, ¶ÔÓ¦ Pll.wt += Pll.dwt
+    // PIæ§åˆ¶å™¨çš„è¾“å‡º (pll->pi_output) å³ä¸ºè®¡ç®—å‡ºçš„è§’é¢‘ç‡è¡¥å¿é‡ Î”Ï‰ã€‚
+    float freq_deviation = pll->pi_output;
 
-    // ¶ÔÏàÎ»½Ç½øĞĞÈ¡Ä££¬Óë LockPhase Âß¼­±£³ÖÒ»ÖÂ
-    // (×¢Òâ£ºÔ­Ê¼´úÂëÖĞĞ¡ÓÚ0Ö±½ÓÖÃ0£¬´Ë´¦ÖÒÊµ»¹Ô­)
-    if (pll->theta >= (2.0f * PI)) {
+    // å°†è¡¥å¿é‡ä¸ç”µç½‘çš„æ ‡ç§°è§’é¢‘ç‡ (50Hzå¯¹åº”) ç›¸åŠ ï¼Œå¾—åˆ°æœ€ç»ˆä¼°ç®—çš„ç”µç½‘è§’é¢‘ç‡ Ï‰ã€‚
+    pll->omega = (2.0f * PI * 50.0f) + freq_deviation;
+
+    // é€šè¿‡å¯¹è§’é¢‘ç‡è¿›è¡Œç§¯åˆ†æ¥æ›´æ–°ç›¸ä½è§’ Î¸ã€‚
+    // è¿™æ˜¯ä¸€ä¸ªç¦»æ•£æ—¶é—´ç§¯åˆ† (å‰å‘æ¬§æ‹‰æ³•): Î¸_new = Î¸_old + Ï‰ * Î”t
+    pll->theta += pll->omega * SAMPLING_PERIOD;
+
+    // ç›¸ä½è§’å½’ä¸€åŒ– (wrapping)ï¼Œç¡®ä¿å…¶å€¼ä¿æŒåœ¨ [0, 2Ï€) åŒºé—´å†…ã€‚
+    if (pll->theta >= (2.0f * PI))
+    {
         pll->theta -= (2.0f * PI);
-    } else if (pll->theta < 0.0f) {
+    }
+    // æ³¨æ„: æ­¤å¤„çš„è´Ÿå€¼å¤„ç†æ–¹å¼æ¯”è¾ƒç‰¹æ®Šï¼Œç›´æ¥ç½®é›¶è€Œä¸æ˜¯åŠ ä¸Š2Ï€ã€‚
+    // è¿™ç§å¤„ç†æ–¹å¼å¯èƒ½æ˜¯ä¸ºäº†åº”å¯¹ç‰¹å®šçš„ç¬æ€æƒ…å†µæˆ–ç®€åŒ–é€»è¾‘ã€‚
+    else if (pll->theta < 0.0f)
+    {
         pll->theta = 0.0f;
     }
 
-
     /* ================================================================================= */
-    /* ²½Öè 6: ¸üĞÂÕıÓàÏÒÖµ£¬¹©ÏÂÒ»´Îµü´úÊ¹ÓÃ                                            */
+    /* æ­¥éª¤ 6: æ›´æ–°æ­£ä½™å¼¦å€¼ï¼Œä¾›ä¸‹ä¸€æ¬¡è¿­ä»£ä½¿ç”¨                                            */
     /* ================================================================================= */
     pll->sin_wt = sinf(pll->theta);
     pll->cos_wt = cosf(pll->theta);
 
 
     /* ================================================================================= */
-    /* ²½Öè 7: ½«×îÖÕ½âñîºóµÄd-qµçÑ¹´æÈëÖ÷½á¹¹Ìå£¬¹©ÆäËû¿ØÖÆ»·Â·Ê¹ÓÃ                     */
+    /* æ­¥éª¤ 7: å°†æœ€ç»ˆè§£è€¦åçš„d-qç”µå‹å­˜å…¥ä¸»ç»“æ„ä½“ï¼Œä¾›å…¶ä»–æ§åˆ¶ç¯è·¯ä½¿ç”¨                     */
     /* ================================================================================= */
-    sys->voltage_dq.d = sys->filter_vpd.filtered; // ×îÖÕµÄÕıĞòdÖáµçÑ¹
-    sys->voltage_dq.q = sys->filter_vpq.filtered; // ×îÖÕµÄÕıĞòqÖáµçÑ¹ (ÀíÂÛÉÏÓ¦Ç÷½üÓÚ0)
+    sys->voltage_dq.d = sys->filter_vpd.filtered; // æœ€ç»ˆçš„æ­£åºdè½´ç”µå‹
+    sys->voltage_dq.q = sys->filter_vpq.filtered; // æœ€ç»ˆçš„æ­£åºqè½´ç”µå‹ (ç†è®ºä¸Šåº”è¶‹è¿‘äº0)
 }
 /*
  *--------------------------------------------------------------------------------------
- * º¯Êı:  clarke_transform
- * ËµÃ÷:  Ö´ĞĞµçÁ÷µÄClarke±ä»»¡£
+ * å‡½æ•°:  clarke_transform
+ * è¯´æ˜:  æ‰§è¡Œç”µæµçš„Clarkeå˜æ¢ã€‚
  *--------------------------------------------------------------------------------------
  */
 static void clarke_transform(void)
 {
     ControlSystem_t *sys = &g_control_system;
+
+    // ç›´æ¥ä»æ»¤æ³¢åçš„åŸå§‹ä¸‰ç›¸ç”µæµè·å–è¾“å…¥
     float ia = sys->current_filtered.phase_a;
     float ib = sys->current_filtered.phase_b;
     float ic = sys->current_filtered.phase_c;
 
-    // ·ùÖµ²»±äClarke±ä»»
+    // ç›´æ¥ä»æ»¤æ³¢åçš„åŸå§‹ä¸‰ç›¸ç”µå‹è·å–è¾“å…¥
+    float va = sys->voltage_filtered.phase_a;
+    float vb = sys->voltage_filtered.phase_b;
+    float vc = sys->voltage_filtered.phase_c;
+
+    // å¹…å€¼ä¸å˜Clarkeå˜æ¢
     sys->current_ab.alpha = TWO_DIV_3 * (ia - 0.5f * ib - 0.5f * ic);
     sys->current_ab.beta = SQRT_3_DIV_3 * (ib - ic);
+
+    // å¹…å€¼ä¸å˜Clarkeå˜æ¢
+    sys->voltage_raw_ab.alpha = TWO_DIV_3 * (va - 0.5f * vb - 0.5f * vc);
+    sys->voltage_raw_ab.beta = SQRT_3_DIV_3 * (vb - vc);
 }
 
 /*
  *--------------------------------------------------------------------------------------
- * º¯Êı:  park_transform
- * ËµÃ÷:  Ö´ĞĞµçÑ¹ºÍµçÁ÷µÄPark±ä»»¡£
+ * å‡½æ•°:  park_transform
+ * è¯´æ˜:  æ‰§è¡Œç”µå‹å’Œç”µæµçš„Parkå˜æ¢ã€‚
  *--------------------------------------------------------------------------------------
  */
 static void park_transform(void)
@@ -442,61 +483,61 @@ static void park_transform(void)
     ControlSystem_t *sys = &g_control_system;
     PLL_t *pll = &sys->pll;
 
-    // ´ÓClarke±ä»»½á¹ûÖĞ»ñÈ¡µçÁ÷alpha, beta
+    // ä»Clarkeå˜æ¢ç»“æœä¸­è·å–ç”µæµalpha, beta
     float Ialpha = sys->current_ab.alpha;
     float Ibeta = sys->current_ab.beta;
 
-    // ´ÓPLLµÄÖĞ¼ä¼ÆËã½á¹ûÖĞ»ñÈ¡µçÑ¹alpha, beta
-    float Valpha = sys->voltage_ab.alpha;
-    float Vbeta = sys->voltage_ab.beta;
+    // ä»PLLçš„ä¸­é—´è®¡ç®—ç»“æœä¸­è·å–ç”µå‹alpha, beta
+    float Valpha = sys->voltage_raw_ab.alpha;
+    float Vbeta = sys->voltage_raw_ab.beta;
 
-    // Ö´ĞĞµçÁ÷µÄPark±ä»»
-    sys->current_dq.d =  Ialpha * pll->cos_wt + Ibeta  * pll->sin_wt;
-    sys->current_dq.q = -Ialpha * pll->sin_wt + Ibeta  * pll->cos_wt;
+    // æ‰§è¡Œç”µæµçš„Parkå˜æ¢
+    sys->current_dq.d =  Ialpha * pll->cos_wt_prev + Ibeta  * pll->sin_wt_prev;
+    sys->current_dq.q = -Ialpha * pll->sin_wt_prev + Ibeta  * pll->cos_wt_prev;
 
-    // Ö´ĞĞµçÑ¹µÄPark±ä»»
-    sys->voltage_dq.d =  Valpha * pll->cos_wt + Vbeta  * pll->sin_wt;
-    sys->voltage_dq.q = -Valpha * pll->sin_wt + Vbeta  * pll->cos_wt;
+    sys->voltage_raw_dq.d =  Valpha * pll->cos_wt_prev + Vbeta  * pll->sin_wt_prev;
+    sys->voltage_raw_dq.q = -Valpha * pll->sin_wt_prev + Vbeta  * pll->cos_wt_prev;
+
 }
 
 /*
  *--------------------------------------------------------------------------------------
- * º¯Êı:  pi_control_process
- * ËµÃ÷:  PI¿ØÖÆÆ÷ÊµÏÖ£¬°üº¬µçÑ¹Íâ»·ºÍd,qÖáµçÁ÷ÄÚ»·¡£
- * (´Ë²¿·ÖÂß¼­À´×ÔÔ­Ê¼´úÂë¶ş)
+ * å‡½æ•°:  pi_control_process
+ * è¯´æ˜:  PIæ§åˆ¶å™¨å®ç°ï¼ŒåŒ…å«ç”µå‹å¤–ç¯å’Œd,qè½´ç”µæµå†…ç¯ã€‚
+ * (æ­¤éƒ¨åˆ†é€»è¾‘æ¥è‡ªåŸå§‹ä»£ç äºŒ)
  *--------------------------------------------------------------------------------------
  */
 static void pi_control_process(void)
 {
     ControlSystem_t *sys = &g_control_system;
 
-//     --- µçÑ¹Íâ»· ---
-//    sys->voltage_ref = 100.0f; // ²Î¿¼Öµ¿ÉÒÔÓÉÈíÆô¶¯»òÍâ²¿¸ø¶¨
-//    sys->pi_voltage.error = sys->voltage_ref - sys->filter_VDC;
-//    sys->pi_voltage.output += KP_VOLTAGE * (sys->pi_voltage.error - sys->pi_voltage.error_prev) + KI_VOLTAGE * sys->pi_voltage.error;
-//    sys->pi_voltage.error_prev = sys->pi_voltage.error;
-//    sys->pi_voltage.output = saturate(sys->pi_voltage.output, -VOLTAGE_LIMIT_MIN, VOLTAGE_LIMIT_MAX);
-//    sys->current_d_ref = sys->pi_voltage.output; // µçÑ¹»·µÄÊä³ö×÷ÎªdÖáµçÁ÷µÄ²Î¿¼Öµ
+//     --- ç”µå‹å¤–ç¯ ---
+//    sys->voltage_ref = 800.0f; // å‚è€ƒå€¼å¯ä»¥ç”±è½¯å¯åŠ¨æˆ–å¤–éƒ¨ç»™å®š
+    sys->pi_voltage.error = sys->voltage_ref - sys->filter_VDC;
+    sys->pi_voltage.output += KP_VOLTAGE * (sys->pi_voltage.error - sys->pi_voltage.error_prev) + KI_VOLTAGE * sys->pi_voltage.error;
+    sys->pi_voltage.error_prev = sys->pi_voltage.error;
+    sys->pi_voltage.output = saturate(sys->pi_voltage.output, -VOLTAGE_LIMIT_MIN, VOLTAGE_LIMIT_MAX);
+    sys->current_d_ref = sys->pi_voltage.output; // ç”µå‹ç¯çš„è¾“å‡ºä½œä¸ºdè½´ç”µæµçš„å‚è€ƒå€¼
 
-    sys->current_d_ref = 2.143f; // µ÷ÊÔ£º¿ÉÔİÊ±ÉèÎª¶¨Öµ
+//    sys->current_d_ref = 2.143f; // è°ƒè¯•ï¼šå¯æš‚æ—¶è®¾ä¸ºå®šå€¼
 
-    // --- dÖáµçÁ÷ÄÚ»· ---
+    // --- dè½´ç”µæµå†…ç¯ ---
     sys->pi_current_d.error = sys->current_d_ref - sys->current_dq.d;
     sys->pi_current_d.output += KP_CURRENT_D * (sys->pi_current_d.error - sys->pi_current_d.error_prev) + KI_CURRENT_D * sys->pi_current_d.error;
     sys->pi_current_d.error_prev = sys->pi_current_d.error;
     sys->pi_current_d.output = saturate(sys->pi_current_d.output, -CURRENT_D_LIMIT, CURRENT_D_LIMIT);
 
-    // --- qÖáµçÁ÷ÄÚ»· ---
-    sys->current_q_ref = 0.0f; // qÖáµçÁ÷²Î¿¼Í¨³£Îª0£¬ÒÔÊµÏÖµ¥Î»¹¦ÂÊÒòÊı
+    // --- qè½´ç”µæµå†…ç¯ ---
+    sys->current_q_ref = 0.0f; // qè½´ç”µæµå‚è€ƒé€šå¸¸ä¸º0ï¼Œä»¥å®ç°å•ä½åŠŸç‡å› æ•°
     sys->pi_current_q.error = sys->current_q_ref - sys->current_dq.q;
     sys->pi_current_q.output += KP_CURRENT_Q * (sys->pi_current_q.error - sys->pi_current_q.error_prev) + KI_CURRENT_Q * sys->pi_current_q.error;
     sys->pi_current_q.error_prev = sys->pi_current_q.error;
     sys->pi_current_q.output = saturate(sys->pi_current_q.output, -CURRENT_Q_LIMIT, CURRENT_Q_LIMIT);
 
-    // --- ¼ÆËãÖ¸ÁîµçÑ¹ (°üº¬Ç°À¡½âñî) ---
-    sys->voltage_cmd.d = sys->voltage_dq.d - sys->pi_current_d.output; // µçÑ¹Ç°À¡ - PIÊä³ö
+    // --- è®¡ç®—æŒ‡ä»¤ç”µå‹ (åŒ…å«å‰é¦ˆè§£è€¦) ---
+    sys->voltage_cmd.d = sys->voltage_raw_dq.d - sys->pi_current_d.output; // ç”µå‹å‰é¦ˆ - PIè¾“å‡º
     if(sys->voltage_cmd.d < 0)  sys->voltage_cmd.d = 0.1;
-    sys->voltage_cmd.q = sys->voltage_dq.q - sys->pi_current_q.output; // µçÑ¹Ç°À¡ - PIÊä³ö
+    sys->voltage_cmd.q = sys->voltage_raw_dq.q - sys->pi_current_q.output; // ç”µå‹å‰é¦ˆ - PIè¾“å‡º
     sys->voltage_cmd.q = saturate(sys->voltage_cmd.q,-0.1 * sys->voltage_cmd.d,0.1 * sys->voltage_cmd.d);
 
 }
@@ -504,9 +545,9 @@ static void pi_control_process(void)
 
 /*
  *--------------------------------------------------------------------------------------
- * º¯Êı:  inverse_park_transform, svpwm_process, update_pwm_compare
- * ËµÃ÷:  ÕâĞ©º¯ÊıÊÇ±ê×¼Ê¸Á¿¿ØÖÆµÄºóĞø²¿·Ö£¬Âß¼­ÓëÔ­Ê¼´úÂëÒ»ÖÂ£¬
- * ½«PI¿ØÖÆÆ÷Êä³öµÄÖ¸ÁîµçÑ¹×ª»»Îª×îÖÕµÄPWM²¨¡£
+ * å‡½æ•°:  inverse_park_transform, svpwm_process, update_pwm_compare
+ * è¯´æ˜:  è¿™äº›å‡½æ•°æ˜¯æ ‡å‡†çŸ¢é‡æ§åˆ¶çš„åç»­éƒ¨åˆ†ï¼Œé€»è¾‘ä¸åŸå§‹ä»£ç ä¸€è‡´ï¼Œ
+ * å°†PIæ§åˆ¶å™¨è¾“å‡ºçš„æŒ‡ä»¤ç”µå‹è½¬æ¢ä¸ºæœ€ç»ˆçš„PWMæ³¢ã€‚
  *--------------------------------------------------------------------------------------
  */
 static void inverse_park_transform(void)
@@ -521,33 +562,33 @@ static void svpwm_process(void)
 {
     ControlSystem_t *sys = &g_control_system;
     SVPWM_t *svpwm = &sys->svpwm;
-    PLL_t *pll = &sys->pll;
+//    PLL_t *pll = &sys->pll;
 
-    // ¼ÆËã²Î¿¼µçÑ¹·ùÖµVm
+    // è®¡ç®—å‚è€ƒç”µå‹å¹…å€¼Vm
     float vm_amplitude = sqrt(sys->voltage_cmd.d * sys->voltage_cmd.d +
                              sys->voltage_cmd.q * sys->voltage_cmd.q);
 
-    // ¼ÆËãÏàÎ»½Ç
-//    float phase_angle = atan2(sys->voltage_ab_cmd.beta, sys->voltage_ab_cmd.alpha);
+    // è®¡ç®—ç›¸ä½è§’
+    float phase_angle = atan2(sys->voltage_ab_cmd.beta, sys->voltage_ab_cmd.alpha);
 
 //    pll->theta = 2 * PI * 11/12;
 
-    // »òÕßÖ±½ÓÊ¹ÓÃPLLµÄÏàÎ»ĞÅÏ¢
-     float phase_angle = pll->theta;
+    // æˆ–è€…ç›´æ¥ä½¿ç”¨PLLçš„ç›¸ä½ä¿¡æ¯
+//     float phase_angle = pll->theta;
 
-    // ¹éÒ»»¯·ùÖµµ½Ö±Á÷Ä¸ÏßµçÑ¹
-    float vm_normalized = vm_amplitude / OUTPUT_VOLTAGE_REF;  // ¼ÙÉèOUTPUT_VOLTAGE_REFÎªÖ±Á÷Ä¸ÏßµçÑ¹
+    // å½’ä¸€åŒ–å¹…å€¼åˆ°ç›´æµæ¯çº¿ç”µå‹
+    float vm_normalized = vm_amplitude / OUTPUT_VOLTAGE_REF;  // OUTPUT_VOLTAGE_REFä¸ºç›´æµæ¯çº¿ç”µå‹
 //    float vm_normalized = 0.5;
 
-    // ÏŞÖÆµ÷ÖÆ¶Èµ½ÏßĞÔµ÷ÖÆ·¶Î§ (0 ~ 1.0)
+    // é™åˆ¶è°ƒåˆ¶åº¦åˆ°çº¿æ€§è°ƒåˆ¶èŒƒå›´ (0 ~ 1.0)
     vm_normalized = saturate(vm_normalized, 0.0, 1.0);
 
-    // ¼ÆËãÈıÏà²Î¿¼µçÑ¹Ë²Ê±Öµ
+    // è®¡ç®—ä¸‰ç›¸å‚è€ƒç”µå‹ç¬æ—¶å€¼
     float va_ref = vm_normalized * cos(phase_angle);
-    float vb_ref = vm_normalized * cos(phase_angle - 2.0944);  // 2¦Ğ/3 = 2.0944
-    float vc_ref = vm_normalized * cos(phase_angle + 2.0944);  // -2¦Ğ/3 = +4¦Ğ/3
+    float vb_ref = vm_normalized * cos(phase_angle - 2.0944);  // 2Ï€/3 = 2.0944
+    float vc_ref = vm_normalized * cos(phase_angle + 2.0944);  // -2Ï€/3 = +4Ï€/3
 
-    // ×î´ó×îĞ¡ÖµËã·¨
+    // æœ€å¤§æœ€å°å€¼ç®—æ³•
     float v_max = va_ref;
     float v_min = va_ref;
 
@@ -557,43 +598,39 @@ static void svpwm_process(void)
     if (vb_ref < v_min) v_min = vb_ref;
     if (vc_ref < v_min) v_min = vc_ref;
 
-    // ¼ÆËãÁãĞòÆ«ÒÆÁ¿
+    // è®¡ç®—é›¶åºåç§»é‡
     float v_offset = -(v_max + v_min) * 0.5;
 
-    // Ìí¼ÓÁãĞòÆ«ÒÆÁ¿µÃµ½µ÷ÖÆ²¨
+    // æ·»åŠ é›¶åºåç§»é‡å¾—åˆ°è°ƒåˆ¶æ³¢
     float va_mod = va_ref + v_offset;
     float vb_mod = vb_ref + v_offset;
     float vc_mod = vc_ref + v_offset;
 
-    // ×ª»»ÎªÕ¼¿Õ±È (0~1)
+    // è½¬æ¢ä¸ºå ç©ºæ¯” (0~1)
     float duty_a = va_mod + 0.5;
     float duty_b = vb_mod + 0.5;
     float duty_c = vc_mod + 0.5;
 
-    // Õ¼¿Õ±ÈÏŞ·ù
+    // å ç©ºæ¯”é™å¹…
     duty_a = saturate(duty_a, 0.0, 1.0);
     duty_b = saturate(duty_b, 0.0, 1.0);
     duty_c = saturate(duty_c, 0.0, 1.0);
 
-    // ´æ´¢Õ¼¿Õ±È
+    // å­˜å‚¨å ç©ºæ¯”
     svpwm->duty_a = duty_a;
     svpwm->duty_b = duty_b;
     svpwm->duty_c = duty_c;
 
 //    floating_pin_protection();
 
-    // ×ª»»Îª¼ÆÊıÖµ£¨150MHzÊ±ÖÓ£©
+    // è½¬æ¢ä¸ºè®¡æ•°å€¼ï¼ˆ150MHzæ—¶é’Ÿï¼‰
     svpwm->tcm1 = (Uint32)duty_to_pwm_register(svpwm->duty_a);
     svpwm->tcm2 = (Uint32)duty_to_pwm_register(svpwm->duty_b);
     svpwm->tcm3 = (Uint32)duty_to_pwm_register(svpwm->duty_c);
-
-//    svpwm->tcm1 = 7500/2;
-//    svpwm->tcm2 = 7500/2;
-//    svpwm->tcm3 = 7500/2;
 //
 //    Uint32 result = duty_to_pwm_register(1);
 
-    // ´æ´¢µ÷ÖÆĞÅÏ¢
+    // å­˜å‚¨è°ƒåˆ¶ä¿¡æ¯
     svpwm->vm_amplitude = vm_amplitude;
     svpwm->modulation_index = vm_normalized;
     svpwm->phase_angle = phase_angle;
@@ -604,15 +641,15 @@ static void update_pwm_compare(void)
     ControlSystem_t *sys = &g_control_system;
     SVPWM_t *svpwm = &sys->svpwm;
 
-    // ¸üĞÂePWM2µÄ±È½ÏÖµ (AÏà)
+    // æ›´æ–°ePWM2çš„æ¯”è¾ƒå€¼ (Aç›¸)
     EPwm2Regs.CMPA.half.CMPA = (Uint16)svpwm->tcm1;
     EPwm2Regs.CMPB           = (Uint16)svpwm->tcm1;
 
-    // ¸üĞÂePWM3µÄ±È½ÏÖµ (BÏà)
+    // æ›´æ–°ePWM3çš„æ¯”è¾ƒå€¼ (Bç›¸)
     EPwm3Regs.CMPA.half.CMPA = (Uint16)svpwm->tcm2;
     EPwm3Regs.CMPB           = (Uint16)svpwm->tcm2;
 
-    // ¸üĞÂePWM4µÄ±È½ÏÖµ (CÏà)
+    // æ›´æ–°ePWM4çš„æ¯”è¾ƒå€¼ (Cç›¸)
     EPwm4Regs.CMPA.half.CMPA = (Uint16)svpwm->tcm3;
     EPwm4Regs.CMPB           = (Uint16)svpwm->tcm3;
 }
@@ -622,14 +659,15 @@ static void data_logging(void)
    ControlSystem_t *sys = &g_control_system;
     DataLogger_t *logger = &g_data_logger;
 
-    // ¼ÇÂ¼Êı¾İµ½Ñ­»·»º³åÇø
+    // è®°å½•æ•°æ®åˆ°å¾ªç¯ç¼“å†²åŒº
     logger->cos_wt[logger->index] = sys->pll.cos_wt;
     logger->current_a[logger->index] = sys->current_filtered.phase_a;
     logger->voltage_a[logger->index] = sys->voltage_filtered.phase_a;
 //    logger->current_d[logger->index] = sys->current_dq.d;
     logger->voltage_positive_q[logger->index]       = sys->filter_vpq.filtered;
-
-    // ¸üĞÂË÷Òı£¨Ñ­»·»º³å£©
+    logger->current_dq_q[logger->index] = sys->current_dq.d;
+    logger->filter_VDC[logger->index] = sys->filter_VDC;
+    // æ›´æ–°ç´¢å¼•ï¼ˆå¾ªç¯ç¼“å†²ï¼‰
     logger->index++;
     if (logger->index >= DATA_BUFFER_SIZE) {
         logger->index = 0;
@@ -638,8 +676,8 @@ static void data_logging(void)
 
 /*
  *--------------------------------------------------------------------------------------
- * º¯Êı:  control_system_init
- * ËµÃ÷:  ³õÊ¼»¯ËùÓĞ¿ØÖÆÏà¹ØµÄ±äÁ¿ºÍÂË²¨Æ÷×´Ì¬¡£
+ * å‡½æ•°:  control_system_init
+ * è¯´æ˜:  åˆå§‹åŒ–æ‰€æœ‰æ§åˆ¶ç›¸å…³çš„å˜é‡å’Œæ»¤æ³¢å™¨çŠ¶æ€ã€‚
  *--------------------------------------------------------------------------------------
  */
 void control_system_init(void)
@@ -647,10 +685,26 @@ void control_system_init(void)
     ControlSystem_t *sys = &g_control_system;
     memset(sys, 0, sizeof(ControlSystem_t));
 
-    // ³õÊ¼»¯´øÍ¨ÂË²¨Æ÷ÏµÊı
+    // åˆå§‹åŒ–å¸¦é€šæ»¤æ³¢å™¨ç³»æ•°
     init_bandpass_filter_coeffs(&sys->bp_coeffs);
 
-    // ³õÊ¼»¯PI¿ØÖÆÆ÷²ÎÊı
+    // --- åˆå§‹åŒ–è½¯å¯åŠ¨å‚æ•° ---
+    sys->voltage_ref_final = 800.0f; // è®¾å®šæœ€ç»ˆç›®æ ‡ä¸º800V
+    sys->voltage_ref_start = 400.0f; // è®¾å®šå¯åŠ¨ç”µå‹ä¸º540V (æ ¹æ®é¢„å……ç”µæƒ…å†µè°ƒæ•´)
+    sys->voltage_ref = sys->voltage_ref_start; // è®©å½“å‰ç›®æ ‡ç”µå‹ä»èµ·å§‹ç”µå‹å¼€å§‹
+    sys->soft_start_complete = 0; // å¯åŠ¨æ—¶ï¼Œè½¯å¯åŠ¨æœªå®Œæˆ
+
+    // è®¡ç®—ç”µå‹å¢é‡ã€‚å†³å®šäº†è½¯å¯åŠ¨çš„å¿«æ…¢ã€‚
+    // å‡è®¾å¼€å…³é¢‘ç‡ä¸º20kHz (T_s = 50us), æœŸæœ›è½¯å¯åŠ¨æ—¶é—´ä¸º 2 ç§’
+    // æ€»æ­¥æ•° = 2s / 50us = 40000æ­¥
+    // æ€»ç”µå‹å¢é‡ = 800V - 540V = 260V
+    // æ¯æ­¥å¢é‡ = 260V / 40000 = 0.0065f
+//    sys->voltage_ramp_increment = 0.0065f;
+
+    // å¦‚æœä¸å¸Œæœ›è®¡ç®—ï¼Œå¯ä»¥å…ˆç»™ä¸€ä¸ªéå¸¸å°çš„å€¼ï¼Œä¾‹å¦‚ 0.001fï¼Œç„¶åæ…¢æ…¢è°ƒæ•´
+     sys->voltage_ramp_increment = 0.001f;
+
+    // åˆå§‹åŒ–PIæ§åˆ¶å™¨å‚æ•°
     sys->pi_voltage.kp = KP_VOLTAGE;
     sys->pi_voltage.ki = KI_VOLTAGE;
 
@@ -660,15 +714,15 @@ void control_system_init(void)
     sys->pi_current_q.kp = KP_CURRENT_Q;
     sys->pi_current_q.ki = KI_CURRENT_Q;
 
-    // ³õÊ¼»¯ËøÏà»·
-    sys->pll.omega = 2.0f * PI * 50.0f; // ³õÊ¼ÆµÂÊÉèÎª50Hz
+    // åˆå§‹åŒ–é”ç›¸ç¯
+    sys->pll.omega = 2.0f * PI * 50.0f; // åˆå§‹é¢‘ç‡è®¾ä¸º50Hz
     sys->pll.theta = 0.0f;
 }
 
 /*
  *--------------------------------------------------------------------------------------
- * º¯Êı:  init_bandpass_filter_coeffs, filter_bandpass
- * ËµÃ÷:  ´Ó´úÂëÒ»ÒÆÖ²¶øÀ´µÄ´øÍ¨ÂË²¨Æ÷ºËĞÄº¯Êı¡£
+ * å‡½æ•°:  init_bandpass_filter_coeffs, filter_bandpass
+ * è¯´æ˜:  ä»ä»£ç ä¸€ç§»æ¤è€Œæ¥çš„å¸¦é€šæ»¤æ³¢å™¨æ ¸å¿ƒå‡½æ•°ã€‚
  *--------------------------------------------------------------------------------------
  */
 static void init_bandpass_filter_coeffs(FilterBandpassData_t *filter_data)
@@ -680,15 +734,15 @@ static void init_bandpass_filter_coeffs(FilterBandpassData_t *filter_data)
 
 static float filter_bandpass(float x_new, FilterBandpassState_t *filter, const FilterBandpassData_t *filter_data)
 {
-    // ¶ÔÊäÈë½øĞĞËõ·Å
+    // å¯¹è¾“å…¥è¿›è¡Œç¼©æ”¾
     filter->x_new_scaled = x_new;
     filter->x_new = filter->x_new_scaled * filter_data->scaled;
 
-    // Ö´ĞĞIIR²î·Ö·½³Ì: y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]
-    // ´úÂëÒ»µÄ·½³ÌÒşÊ½µØ¶¨ÒåÁË b0=1, b1=0, b2=-1
+    // æ‰§è¡ŒIIRå·®åˆ†æ–¹ç¨‹: y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]
+    // éšå¼åœ°å®šä¹‰äº† b0=1, b1=0, b2=-1
     filter->y_new = filter->x_new - filter->x_pre2 - (filter_data->a1 * filter->y_pre1) - (filter_data->a2 * filter->y_pre2);
 
-    // ¸üĞÂÀúÊ·×´Ì¬Öµ£¬ÎªÏÂÒ»´Î¼ÆËã×ö×¼±¸
+    // æ›´æ–°å†å²çŠ¶æ€å€¼ï¼Œä¸ºä¸‹ä¸€æ¬¡è®¡ç®—åšå‡†å¤‡
     filter->y_pre2 = filter->y_pre1;
     filter->y_pre1 = filter->y_new;
 
@@ -698,43 +752,44 @@ static float filter_bandpass(float x_new, FilterBandpassState_t *filter, const F
     return filter->y_new;
 }
 
-
-/* ========== Ìí¼ÓĞü¿Õ¼ì²â±£»¤ ========== */
-static void floating_pin_protection(void)
+/*
+ *--------------------------------------------------------------------------------------
+ * å‡½æ•°:  soft_start_process
+ * è¯´æ˜:  æ‰§è¡Œç”µå‹æ–œå¡è½¯å¯åŠ¨é€»è¾‘ã€‚åœ¨æ¯æ¬¡ä¸­æ–­æ—¶è¢«è°ƒç”¨ã€‚
+ *--------------------------------------------------------------------------------------
+ */
+static void soft_start_process(void)
 {
     ControlSystem_t *sys = &g_control_system;
-    SVPWM_t *svpwm = &sys->svpwm;
 
-    // ¼ì²âADC¶ÁÊıÊÇ·ñÒì³£
-    if (abs(sys->voltage_filtered.phase_a / OUTPUT_VOLTAGE_REF) < 0.1 &&
-        abs(sys->voltage_filtered.phase_b / OUTPUT_VOLTAGE_REF) < 0.1 &&
-        abs(sys->voltage_filtered.phase_c / OUTPUT_VOLTAGE_REF) < 0.1) {
+    // å¦‚æœè½¯å¯åŠ¨å°šæœªå®Œæˆ
+    if (!sys->soft_start_complete)
+    {
+        // å¢åŠ å½“å‰çš„ç›®æ ‡ç”µå‹
+        sys->voltage_ref += sys->voltage_ramp_increment;
 
-        // ¿ÉÄÜÊÇĞü¿Õ×´Ì¬£¬½øÈë±£»¤Ä£Ê½
-//        sys->protection_mode = FLOATING_PIN_PROTECTION;
-
-        // Ç¿ÖÆPWMÊä³öÎª°²È«Öµ
-        svpwm->duty_a = 0.5;  // 50%Õ¼¿Õ±È
-        svpwm->duty_b = 0.5;
-        svpwm->duty_c = 0.5;
-
-        // »òÕß¹Ø±ÕPWMÊä³ö
-        // disable_pwm_output();
+        // åˆ¤æ–­æ˜¯å¦å·²è¾¾åˆ°æˆ–è¶…è¿‡æœ€ç»ˆç›®æ ‡ç”µå‹
+        if (sys->voltage_ref >= sys->voltage_ref_final)
+        {
+            // å¦‚æœæ˜¯ï¼Œåˆ™å°†ç›®æ ‡ç”µå‹å›ºå®šåœ¨æœ€ç»ˆå€¼ï¼Œå¹¶æ ‡è®°è½¯å¯åŠ¨å®Œæˆ
+            sys->voltage_ref = sys->voltage_ref_final;
+            sys->soft_start_complete = 1;
+        }
     }
+    // å¦‚æœè½¯å¯åŠ¨å·²å®Œæˆï¼Œåˆ™æ— éœ€ä»»ä½•æ“ä½œï¼Œsys->voltage_ref å°†ä¿æŒåœ¨æœ€ç»ˆå€¼
 }
 
-
-/* ========== ×ª»»º¯Êı ========== */
+/* ========== è½¬æ¢å‡½æ•° ========== */
 static Uint32 duty_to_pwm_register(float duty_ratio)
 {
-    // 1. ÏŞÖÆÕ¼¿Õ±È·¶Î§
+    // 1. é™åˆ¶å ç©ºæ¯”èŒƒå›´
     if (duty_ratio < 0.0f) duty_ratio = 0.0f;
     if (duty_ratio > 1.0f) duty_ratio = 1.0f;
 
-    // 2. ¼ÆËãPWM±È½ÏÖµ
+    // 2. è®¡ç®—PWMæ¯”è¾ƒå€¼
     Uint32 compare_value = (Uint32)(duty_ratio * PWM_TBPRD_COUNT);
 
-    // 3. È·±£²»³¬¹ıÖÜÆÚÖµ
+    // 3. ç¡®ä¿ä¸è¶…è¿‡å‘¨æœŸå€¼
     if (compare_value > PWM_TBPRD_COUNT) {
         compare_value = PWM_TBPRD_COUNT;
     }
